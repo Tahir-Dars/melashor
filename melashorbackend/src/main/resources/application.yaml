@@ -3,14 +3,38 @@ spring:
     name:melashor
 
   datasource:
-    url:${SPRING_DATASOURCE_URL: jdbc://postgresql://localhost:5432/shopatease}
-    username:${SPRING_DATASOURCE_USERNAME: melashor}
-    password:${SPRING_DATASOURCE_PASSWORD: newpassword}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shopatease}
+    username: ${SPRING_DATASOURCE_USERNAME:melashor}
+    password: ${SPRING_DATASOURCE_PASSWORD:newpassword}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: updated
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      repositories:
+        enabled: true
+
+  feed:
+    async:
+      enabled: true
+
+      stream:
+        key: feed:events
+
+      consumer:
+        group: feed:workers
+        name: worker-1
+        max-processing-attempts: 5
+        dlq-stream-key: feed:events:dlq
+        reclaim-enabled: true
+        reclaim-fixed-delay-ms: 5000
+        reclaim-idle-ms: 30000
+        reclaim-batch-size: 50
 
 
 
