@@ -1,4 +1,4 @@
-package com.app.melashor.domain.dto.record;
+package com.app.melashor.domain.dto;
 
 public enum TimeLineMode {
     HOME,
