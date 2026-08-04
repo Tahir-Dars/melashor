@@ -36,6 +36,21 @@ spring:
         reclaim-idle-ms: 30000
         reclaim-batch-size: 50
 
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,metrics,prometheus
+    endpoint:
+      health:
+        show-details: always
+    prometheus:
+      metrics:
+        exports:
+          enabled: true
+
+
+
 
 
 
