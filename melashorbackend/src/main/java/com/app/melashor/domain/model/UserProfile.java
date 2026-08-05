@@ -7,17 +7,17 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 @Table(name = "users")
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@RequiredArgsConstructor
 public class UserProfile {
     @Id
-    private String id;
+    private String userId;
 
     @Column(unique = true, nullable = false)
     private String handle;
