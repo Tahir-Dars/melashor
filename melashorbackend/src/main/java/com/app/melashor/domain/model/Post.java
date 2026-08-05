@@ -12,8 +12,6 @@ import java.time.Instant;
 @Entity
 @Table(name = "posts")
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Post {
     @Id
     private String postId;
