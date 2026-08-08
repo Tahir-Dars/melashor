@@ -94,4 +94,8 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .register(meterRegistry)
                 .record(normalizedPageSize);
     }
+    @Override
+    public void recordHomeFeedCacheLookup(String outcome){
+         meterRegistry.counter("feedme.feed.home.cache.lookups","outcome",outcome).increment();
+    }
 }
