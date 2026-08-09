@@ -1,7 +1,9 @@
 package com.app.melashor.service.serviceImpl;
 
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
+import com.app.melashor.domain.model.FollowRelationships;
 import com.app.melashor.domain.model.UserProfile;
+import com.app.melashor.repositories.FollowRelationshipsRepository;
 import com.app.melashor.repositories.UserProfileRepository;
 import com.app.melashor.service.FeedCursorCodec;
 import com.app.melashor.service.FeedMetricsService;
@@ -12,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,6 +26,8 @@ public class FeedServiceMgr implements FeedService {
     private final FeedMetricsService metricsService;
     private final UserProfileRepository userProfileRepository;
     private final FeedCursorCodecMgr codecMgr;
+    private final FollowRelationshipsRepository followRelationshipsRepo;
+
 
     @Override
     public TimeLinePageResponse getHomeFeed(String userId, String cursor, String limit) {
@@ -34,7 +40,7 @@ public class FeedServiceMgr implements FeedService {
             UserProfile viewer = getUser(userId);
             FeedCursorCodec.FeedCursor pageCursor = codecMgr.parse(cursor);
 
-            VisibleAuthors visibleAuthors=getVisibleAuthors(viewer);
+            VisibleAuthors visibleAuthors = getVisibleAuthors(viewer);
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
             throw e;
@@ -43,7 +49,28 @@ public class FeedServiceMgr implements FeedService {
     }
 
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {
-        return new VisibleAuthors(new HashSet<>(),new HashSet<>(),new HashSet<>());
+        List<FollowRelationships> followRelations = followRelationshipsRepo.findByFollowed_Id(viewer.getUserId());
+        Set<String> allAuthorIds = new LinkedHashSet<>();
+        Set<String> hotAuthorIds = new LinkedHashSet<>();
+        Set<String> nonHotAuthorIds = new LinkedHashSet<>();
+
+        allAuthorIds.add(viewer.getUserId());
+        if (viewer.isHotUser()) {
+            hotAuthorIds.add(viewer.getUserId());
+        } else {
+            nonHotAuthorIds.add(viewer.getUserId());
+        }
+
+        for (FollowRelationships relations : followRelations) {
+            UserProfile author = relations.getFollowed();
+            allAuthorIds.add(viewer.getUserId());
+            if (author.isHotUser()) {
+                hotAuthorIds.add(author.getUserId());
+            } else {
+                nonHotAuthorIds.add(author.getUserId());
+            }
+        }
+        return new VisibleAuthors(allAuthorIds, hotAuthorIds, nonHotAuthorIds);
     }
 
 
