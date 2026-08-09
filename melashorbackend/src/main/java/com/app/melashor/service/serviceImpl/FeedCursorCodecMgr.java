@@ -4,12 +4,14 @@ import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.service.FeedCursorCodec;
 import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.regex.Pattern;
 
 @NoArgsConstructor
+@Service
 public class FeedCursorCodecMgr implements FeedCursorCodec {
 
     private static final String SEPARATOR = "|";
