@@ -23,10 +23,10 @@ public class FollowRelationships {
     @JoinColumn(name = "followed_id", nullable = false)
     private UserProfile followed;
 
-    public FollowRelationships(UserProfile follower,UserProfile followed){
-        this.id=new FollowRelationshipsId(follower.getUserId(),followed.getUserId());
-        this.follower=follower;
-        this.followed=followed;
+    public FollowRelationships(UserProfile follower, UserProfile followed) {
+        this.id = new FollowRelationshipsId(follower.getUserId(), followed.getUserId());
+        this.follower = follower;
+        this.followed = followed;
     }
 }
 
