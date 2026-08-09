@@ -16,4 +16,8 @@ public class FeedCacheServiceMgr implements FeedCacheService {
     public Optional<TimeLinePageResponse> getHomeFeed(String userId) {
         return Optional.empty();
     }
+
+    private String homeFeedKey(String userId) {
+        return "feed:home " + userId;
+    }
 }
