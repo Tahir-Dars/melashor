@@ -136,4 +136,12 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .register(meterRegistry)
                 .increment();
     }
+
+    public void recordDeliveryPath(String deliveryPath){
+        meterRegistry.counter("feedme.feed.delivery.path","Path",deliveryPath).increment();
+
+
+    }
+
+
 }

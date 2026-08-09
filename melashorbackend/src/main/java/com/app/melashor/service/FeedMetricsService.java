@@ -21,4 +21,6 @@ public interface FeedMetricsService {
     void recordFollowRequest(long startedAtNanos, String action, boolean createdRelation);
 
     void recordServiceError(String operation, String statusCode);
+
+    void recordDeliveryPath(String deliveryPath);
 }
