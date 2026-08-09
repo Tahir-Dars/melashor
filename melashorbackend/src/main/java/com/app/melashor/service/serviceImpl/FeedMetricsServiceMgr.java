@@ -84,6 +84,7 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
             meterRegistry.counter("feedme.feed.user.next_cursor").increment();
         }
     }
+
     @Override
     public void recordUserFeedRequestedPageSize(int requestedLimit, int normalizedPageSize) {
 
@@ -94,8 +95,16 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .register(meterRegistry)
                 .record(normalizedPageSize);
     }
+
     @Override
-    public void recordHomeFeedCacheLookup(String outcome){
-         meterRegistry.counter("feedme.feed.home.cache.lookups","outcome",outcome).increment();
+    public void recordHomeFeedCacheLookup(String outcome) {
+        meterRegistry.counter("feedme.feed.home.cache.lookups", "outcome", outcome).increment();
+    }
+
+    @Override
+    public void recordHomeFeedMerge(String mode, int baseItemsUsed, int hotItemsUsed) {
+        meterRegistry.counter("feedme.feed.home.merge", "mode", mode).increment();
+        meterRegistry.summary("feedme.feed.home.merge.base_items").record(baseItemsUsed);
+        meterRegistry.summary("feedme.feed.home.merge.hot_items").record(hotItemsUsed);
     }
 }
