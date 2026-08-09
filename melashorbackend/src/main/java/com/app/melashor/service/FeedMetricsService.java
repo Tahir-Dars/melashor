@@ -17,4 +17,6 @@ public interface FeedMetricsService {
     void recordHomeFeedCacheLookup(String outcome);
 
     void recordHomeFeedMerge(String mode, int baseItemsUsed, int hotItemsUsed);
+
+    void recordFollowRequest(long startedAtNanos, String action, boolean createdRelation);
 }

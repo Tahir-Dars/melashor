@@ -107,4 +107,22 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
         meterRegistry.summary("feedme.feed.home.merge.base_items").record(baseItemsUsed);
         meterRegistry.summary("feedme.feed.home.merge.hot_items").record(hotItemsUsed);
     }
+
+    @Override
+    public void recordFollowRequest(long startedAtNanos, String action, boolean createdRelation) {
+
+        Timer.builder("feedme.follows.latency")
+                .description("Follow and unfollow request latency ")
+                .tag("action", action)
+                .tag("changed_state", String.valueOf(createdRelation))
+                .register(meterRegistry)
+                .record(System.nanoTime() - startedAtNanos, TimeUnit.NANOSECONDS);
+
+        Counter.builder("feedme.follows.requests")
+                .description("Follow and unfollows request number")
+                .tag("action", action)
+                .tag("changed_action", String.valueOf(createdRelation))
+                .register(meterRegistry)
+                .increment();
+    }
 }
