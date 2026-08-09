@@ -1,5 +1,6 @@
 package com.app.melashor.service.serviceImpl;
 
+import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.domain.model.FollowRelationships;
 import com.app.melashor.domain.model.UserProfile;
@@ -49,6 +50,12 @@ public class FeedServiceMgr implements FeedService {
     }
 
     private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
+    }
+
+    private record FeedSlice(List<FeedItemResponse> itemResponses, boolean hasMore) {
+    }
+
+    private record NormalFeedSliceResult(FeedSlice slice, String cacheOutcome) {
     }
 
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {

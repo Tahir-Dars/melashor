@@ -12,7 +12,7 @@ public interface FeedMetricsService {
 
     void recordUserFeedRequest(long startAtNanos, boolean hasNextCursor, int itemsReturned);
 
-    public void recordUserFeedRequestedPageSize(int requestedLimit, int normalizedPageSize);
+    void recordUserFeedRequestedPageSize(int requestedLimit, int normalizedPageSize);
 
     void recordHomeFeedCacheLookup(String outcome);
 
