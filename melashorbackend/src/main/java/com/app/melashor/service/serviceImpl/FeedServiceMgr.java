@@ -17,7 +17,9 @@ public class FeedServiceMgr implements FeedService {
     @Override
     public TimeLinePageResponse getHomeFeed(String userId, String cursor, String limit) {
         long startedAtNanos = metricsService.startTime();
-        int pageSize = normalizedLimit(Integer.parseInt(limit));
+        int limitInInt = Integer.parseInt(limit);
+        int pageSize = normalizedLimit(limitInInt);
+        metricsService.recordHomeFeedRequestedPageSize(limitInInt, pageSize);
         return null;
     }
 
