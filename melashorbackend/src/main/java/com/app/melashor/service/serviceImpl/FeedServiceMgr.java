@@ -48,6 +48,9 @@ public class FeedServiceMgr implements FeedService {
         return null;
     }
 
+    private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
+    }
+
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {
         List<FollowRelationships> followRelations = followRelationshipsRepo.findByFollowed_Id(viewer.getUserId());
         Set<String> allAuthorIds = new LinkedHashSet<>();
