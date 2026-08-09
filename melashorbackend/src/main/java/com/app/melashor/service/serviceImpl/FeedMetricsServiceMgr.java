@@ -125,4 +125,15 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .register(meterRegistry)
                 .increment();
     }
+
+    @Override
+    public void recordServiceError(String operation, String statusCode) {
+
+        Counter.builder("feedme.service.errors")
+                .description("Service-level errors by Operation and Status Code")
+                .tag("operation", operation)
+                .tag("Status", statusCode)
+                .register(meterRegistry)
+                .increment();
+    }
 }
