@@ -42,4 +42,15 @@ public class FeedCacheServiceMgr implements FeedCacheService {
     private String homeFeedKey(String userId) {
         return "feed:home " + userId;
     }
+
+    private void cacheHomeFeed(TimeLinePageResponse timeLinePageResponse) {
+        try {
+            String payload = objectMapper.writeValueAsString(timeLinePageResponse);
+            redisTemplate.opsForValue().set(homeFeedKey
+                    (timeLinePageResponse.timelineOwnerId()), payload, HOME_FEED_TTL);
+        } catch (Exception e) {
+            log.info("Something is wrong with the redis on fetching userId: {},{} ", timeLinePageResponse.timelineOwnerId(), e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 }
