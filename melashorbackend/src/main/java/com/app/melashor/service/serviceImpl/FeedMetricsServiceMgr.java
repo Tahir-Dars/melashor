@@ -137,11 +137,14 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .increment();
     }
 
-    public void recordDeliveryPath(String deliveryPath){
-        meterRegistry.counter("feedme.feed.delivery.path","Path",deliveryPath).increment();
-
-
+    @Override
+    public void recordDeliveryPath(String deliveryPath) {
+        meterRegistry.counter("feedme.feed.delivery.path", "Path", deliveryPath).increment();
     }
 
+    @Override
+    public void recordCacheMutation(String action) {
+        meterRegistry.counter("feedme.feed.cache.mutations", "action", action).increment();
+    }
 
 }
