@@ -77,13 +77,13 @@ public class FeedServiceMgr implements FeedService {
             return new NormalFeedSliceResult(cacheSlice.get(), "hit");
         }
         List<Post> posts = fetchHomeFeedPosts(nonHotUserIds, pageCursor, pageSize + 1);
-    return null;
+        return null;
     }
 
     private List<Post> fetchHomeFeedPosts(Set<String> authorIds, FeedCursorCodec.FeedCursor pageCursor, int fetchSize) {
         PageRequest pageRequest = PageRequest.of(0, fetchSize);
         if (pageCursor == null) {
-            return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds,pageRequest);
+            return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds, pageRequest);
         }
         return null;
     }
