@@ -6,6 +6,7 @@ import com.app.melashor.domain.model.FollowRelationships;
 import com.app.melashor.domain.model.UserProfile;
 import com.app.melashor.repositories.FollowRelationshipsRepository;
 import com.app.melashor.repositories.UserProfileRepository;
+import com.app.melashor.service.FeedCacheService;
 import com.app.melashor.service.FeedCursorCodec;
 import com.app.melashor.service.FeedMetricsService;
 import com.app.melashor.service.FeedService;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -28,6 +30,7 @@ public class FeedServiceMgr implements FeedService {
     private final UserProfileRepository userProfileRepository;
     private final FeedCursorCodecMgr codecMgr;
     private final FollowRelationshipsRepository followRelationshipsRepo;
+    private final FeedCacheService feedCacheService;
 
 
     @Override
@@ -42,11 +45,64 @@ public class FeedServiceMgr implements FeedService {
             FeedCursorCodec.FeedCursor pageCursor = codecMgr.parse(cursor);
 
             VisibleAuthors visibleAuthors = getVisibleAuthors(viewer);
+            NormalFeedSliceResult normalFeedSliceResult =
+                    getNormalHomeFeedSlice(viewer.getUserId(), visibleAuthors.nonHotAuthorIds(), pageCursor, pageSize);
+
+            FeedSlice hotSlice = getHotHomeFeedSlice(viewer.getUserId(), visibleAuthors, pageCursor, pageSize);
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
             throw e;
         }
         return null;
+    }
+
+    private FeedSlice getHotHomeFeedSlice(String userId, VisibleAuthors visibleAuthors,
+                                          FeedCursorCodec.FeedCursor pageCursor, int pageSize) {
+        return null;
+    }
+
+    private NormalFeedSliceResult getNormalHomeFeedSlice(String userId, Set<String> nonHotUserIds,
+                                                         FeedCursorCodec.FeedCursor pageCursor, int pageSize) {
+        if (nonHotUserIds.isEmpty()) {
+            FeedSlice slice = new FeedSlice(List.of(), false);
+            return new NormalFeedSliceResult(slice, "empty_non_hot");
+        }
+
+        Optional<FeedSlice> cacheSlice = getCachedNormalHomeFeedSlice(userId, pageCursor, pageSize);
+        return null;
+    }
+
+    private Optional<FeedSlice> getCachedNormalHomeFeedSlice(String userId, FeedCursorCodec.FeedCursor pageCursor,
+                                                             int pageSize) {
+        if (pageCursor != null) {
+            metricsService.recordHomeFeedCacheLookup("bypass_cursor");
+            return Optional.empty();
+        }
+
+        if (pageSize > FeedCacheServiceMgr.DEFAULT_PAGE_SIZE) {
+            metricsService.recordHomeFeedCacheLookup("Bypass_page_size");
+            return Optional.empty();
+        }
+        Optional<TimeLinePageResponse> cachedPage = feedCacheService.getHomeFeed(userId);
+
+        if (cachedPage.isEmpty()) {
+            metricsService.recordHomeFeedCacheLookup("miss");
+            return Optional.empty();
+        }
+
+        Optional<FeedSlice> adapted = adaptCachedFirstPage(cachedPage.get(), pageSize);
+        metricsService.recordHomeFeedCacheLookup(adapted.isPresent() ? "hit" : "incomplete");
+        return adapted;
+    }
+
+    private Optional<FeedSlice> adaptCachedFirstPage(TimeLinePageResponse cachedPage, int pageSize) {
+        if (cachedPage.feedItemResponses().size() < pageSize || cachedPage.nextCursor() != null) {
+            return Optional.empty();
+        }
+        List<FeedItemResponse> pageItems = cachedPage.feedItemResponses()
+                .stream().limit(pageSize).toList();
+        FeedSlice feedSlice = new FeedSlice(pageItems, cachedPage.feedItemResponses().size() > pageItems.size());
+        return Optional.of(feedSlice);
     }
 
     private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
