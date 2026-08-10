@@ -77,6 +77,23 @@ public class FeedServiceMgr implements FeedService {
             return new NormalFeedSliceResult(cacheSlice.get(), "hit");
         }
         List<Post> posts = fetchHomeFeedPosts(nonHotUserIds, pageCursor, pageSize + 1);
+        FeedSlice slice = buildFeedSlice(posts, pageSize, userId, nonHotUserIds);
+        return null;
+    }
+
+    private FeedSlice buildFeedSlice(List<Post> posts, int pageSize,
+                                     String userId, Set<String> visibleAuthorIds) {
+        boolean hasMore = posts.size() > pageSize;
+
+        List<Post> pagePosts = hasMore ? posts.subList(0, pageSize) : posts;
+
+        List<FeedItemResponse> pageItems = pagePosts.stream()
+                .map(post -> toFeedItems(post, userId, visibleAuthorIds))
+                .toList();
+        return new FeedSlice(pageItems, hasMore);
+    }
+
+    private FeedItemResponse toFeedItems(Post post, String viewerId, Set<String> visibleAuthorIds) {
         return null;
     }
 
@@ -85,7 +102,7 @@ public class FeedServiceMgr implements FeedService {
         if (pageCursor == null) {
             return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds, pageRequest);
         }
-        return null;
+        return postRepository.findHomeFeedPageAfterCursor(authorIds, pageCursor.createdAt(), pageCursor.postId(), pageRequest);
     }
 
     private Optional<FeedSlice> getCachedNormalHomeFeedSlice(String userId, FeedCursorCodec.FeedCursor pageCursor,
