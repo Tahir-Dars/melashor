@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -94,6 +96,15 @@ public class FeedServiceMgr implements FeedService {
     }
 
     private FeedItemResponse toFeedItems(Post post, String viewerId, Set<String> visibleAuthorIds) {
+
+        UserProfile author = post.getAuthor();
+        double recencyScore = 1.0 - Duration.between(post
+                .getCreatedAt(), Instant.now()).toMinutes();
+        recencyScore /= 600.0;
+        double hotUserPenalty = author.isHotUser() ? 0.15 : 0.0;
+
+//        double affinityBoost = visibleAuthorIds(author.getUserId(),  viewerId.equals(author.getUserId()));
+
         return null;
     }
 
