@@ -3,14 +3,17 @@ package com.app.melashor.service.serviceImpl;
 import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.domain.model.FollowRelationships;
+import com.app.melashor.domain.model.Post;
 import com.app.melashor.domain.model.UserProfile;
 import com.app.melashor.repositories.FollowRelationshipsRepository;
+import com.app.melashor.repositories.PostRepository;
 import com.app.melashor.repositories.UserProfileRepository;
 import com.app.melashor.service.FeedCacheService;
 import com.app.melashor.service.FeedCursorCodec;
 import com.app.melashor.service.FeedMetricsService;
 import com.app.melashor.service.FeedService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +34,7 @@ public class FeedServiceMgr implements FeedService {
     private final FeedCursorCodecMgr codecMgr;
     private final FollowRelationshipsRepository followRelationshipsRepo;
     private final FeedCacheService feedCacheService;
+    private final PostRepository postRepository;
 
 
     @Override
@@ -69,6 +73,18 @@ public class FeedServiceMgr implements FeedService {
         }
 
         Optional<FeedSlice> cacheSlice = getCachedNormalHomeFeedSlice(userId, pageCursor, pageSize);
+        if (cacheSlice.isPresent()) {
+            return new NormalFeedSliceResult(cacheSlice.get(), "hit");
+        }
+        List<Post> posts = fetchHomeFeedPosts(nonHotUserIds, pageCursor, pageSize + 1);
+    return null;
+    }
+
+    private List<Post> fetchHomeFeedPosts(Set<String> authorIds, FeedCursorCodec.FeedCursor pageCursor, int fetchSize) {
+        PageRequest pageRequest = PageRequest.of(0, fetchSize);
+        if (pageCursor == null) {
+            return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds,pageRequest);
+        }
         return null;
     }
 
