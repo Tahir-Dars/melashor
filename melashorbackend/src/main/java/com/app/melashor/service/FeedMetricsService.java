@@ -23,4 +23,5 @@ public interface FeedMetricsService {
     void recordServiceError(String operation, String statusCode);
 
     void recordDeliveryPath(String deliveryPath);
+    void recordCacheMutation(String action);
 }

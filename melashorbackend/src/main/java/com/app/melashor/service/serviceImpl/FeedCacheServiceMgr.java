@@ -43,7 +43,12 @@ public class FeedCacheServiceMgr implements FeedCacheService {
         return "feed:home " + userId;
     }
 
-    private void cacheHomeFeed(TimeLinePageResponse timeLinePageResponse) {
+    private void cacheHomeFeed(TimeLinePageResponse pageResponse) {
+        writeHomeFeed(pageResponse);
+        metricsService.recordCacheMutation("write_first_page");
+    }
+
+    private void writeHomeFeed(TimeLinePageResponse timeLinePageResponse) {
         try {
             String payload = objectMapper.writeValueAsString(timeLinePageResponse);
             redisTemplate.opsForValue().set(homeFeedKey
