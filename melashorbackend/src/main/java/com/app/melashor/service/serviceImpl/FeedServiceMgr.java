@@ -55,7 +55,7 @@ public class FeedServiceMgr implements FeedService {
             NormalFeedSliceResult normalFeedSliceResult =
                     getNormalHomeFeedSlice(viewer.getUserId(), visibleAuthors.nonHotAuthorIds(), pageCursor, pageSize);
 
-            FeedSlice hotSlice = getHotHomeFeedSlice(viewer.getUserId(), visibleAuthors, pageCursor, pageSize);
+            FeedSlice hotSlice = getHotHomeFeedSlice(viewer.getUserId(), visibleAuthors.hotAuthorIds(), pageCursor, pageSize);
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
             throw e;
@@ -63,14 +63,14 @@ public class FeedServiceMgr implements FeedService {
         return null;
     }
 
-    private FeedSlice getHotHomeFeedSlice(String userId, VisibleAuthors visibleAuthors,
+    private FeedSlice getHotHomeFeedSlice(String userId, Set<String> hotAuthorIds,
                                           FeedCursorCodec.FeedCursor pageCursor, int pageSize) {
-        if (visibleAuthors.hotAuthorIds.isEmpty()) {
+        if (hotAuthorIds.isEmpty()) {
             return new FeedSlice(List.of(), false);
         }
-        List<Post> posts = fetchHomeFeedPosts(visibleAuthors.hotAuthorIds(), pageCursor, pageSize + 1);
+        List<Post> posts = fetchHomeFeedPosts(hotAuthorIds, pageCursor, pageSize + 1);
 
-        return buildFeedSlice(posts, pageSize, userId, visibleAuthors.hotAuthorIds());
+        return buildFeedSlice(posts, pageSize, userId, hotAuthorIds);
     }
 
     private NormalFeedSliceResult getNormalHomeFeedSlice(String userId, Set<String> nonHotUserIds,
