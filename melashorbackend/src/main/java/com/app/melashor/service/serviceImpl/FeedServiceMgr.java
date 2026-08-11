@@ -63,6 +63,21 @@ public class FeedServiceMgr implements FeedService {
         return null;
     }
 
+    private String determineMergeMode(FeedSlice normalSlice, FeedSlice hotSlice) {
+        boolean hasNormal = !normalSlice.itemResponses().isEmpty();
+        boolean hasHot = !hotSlice.itemResponses().isEmpty();
+        if (hasNormal && hasHot) {
+            return "mixed";
+        }
+        if (hasNormal) {
+            return "normal-only";
+        }
+        if (hasHot) {
+            return "Hot Only";
+        }
+        return "empty";
+    }
+
     private FeedSlice getHotHomeFeedSlice(String userId, Set<String> hotAuthorIds,
                                           FeedCursorCodec.FeedCursor pageCursor, int pageSize) {
         if (hotAuthorIds.isEmpty()) {
