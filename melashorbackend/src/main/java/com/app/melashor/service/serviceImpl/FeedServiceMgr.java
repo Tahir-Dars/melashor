@@ -76,6 +76,11 @@ public class FeedServiceMgr implements FeedService {
         }
     }
 
+    @Override
+    public TimeLinePageResponse getUserFeed(String userId, String cursor, int limit) {
+        return null;
+    }
+
     private TimeLinePageResponse mergeHomeFeedSlices(String userId, int totalItems, int pageSize, FeedSlice normalSlice, FeedSlice hotSlice) {
 
         List<FeedItemResponse> mergedItems = new ArrayList<>(pageSize + 1);
