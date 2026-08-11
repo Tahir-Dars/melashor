@@ -95,13 +95,38 @@ public class FeedServiceMgr implements FeedService {
                     : null;
 
             if (nextH0t == null || (nextNormal != null && FEED_ORDER.compare(nextNormal, nextH0t) <= 0)) {
-
+                mergedItems.add(nextNormal);
+                normalIndex++;
+                normalItemsUsed++;
             } else {
-
+                mergedItems.add(nextH0t);
+                hotIndex++;
+                hotItemsUsed++;
             }
 
         }
-        return null;
+        boolean hasMore = mergedItems.size() > pageSize
+                || normalIndex < normalSlice.itemResponses().size()
+                || hotIndex < hotSlice.itemResponses().size()
+                || normalSlice.hasMore()
+                || hotSlice.hasMore();
+        List<FeedItemResponse> pageItems = mergedItems.size() > pageSize ? mergedItems.subList(0, pageSize)
+                : mergedItems;
+        String nextCursor = hasMore && !pageItems.isEmpty()
+                ? codecMgr.encode(pageItems.getLast()) : null;
+
+        metricsService.recordHomeFeedMerge(determineMergeMode(normalSlice, hotSlice),
+                normalItemsUsed,
+                hotItemsUsed);
+
+
+        return new TimeLinePageResponse(
+                userId,
+                pageItems,
+                TimeLineMode.HOME,
+                totalItems,
+                nextCursor
+        );
     }
 
     private String determineMergeMode(FeedSlice normalSlice, FeedSlice hotSlice) {
