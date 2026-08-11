@@ -33,6 +33,7 @@ public class FeedServiceMgr implements FeedService {
             Comparator.comparing(FeedItemResponse::createdAt)
                     .thenComparing(FeedItemResponse::postId)
                     .reversed();
+
     private final FeedMetricsService metricsService;
     private final UserProfileRepository userProfileRepository;
     private final FeedCursorCodecMgr codecMgr;
@@ -68,11 +69,11 @@ public class FeedServiceMgr implements FeedService {
                     determineMergeMode(normalFeedSliceResult.slice, hotSlice),
                     pageResponse.nextCursor() != null,
                     pageResponse.feedItemResponses().size());
+            return pageResponse;
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
             throw e;
         }
-        return null;
     }
 
     private TimeLinePageResponse mergeHomeFeedSlices(String userId, int totalItems, int pageSize, FeedSlice normalSlice, FeedSlice hotSlice) {
@@ -194,7 +195,8 @@ public class FeedServiceMgr implements FeedService {
         return new FeedSlice(pageItems, hasMore);
     }
 
-    private FeedItemResponse toFeedItems(Post post, String viewerId, Set<String> visibleAuthorIds) {
+    private FeedItemResponse toFeedItems(Post post, String viewerId,
+                                         Set<String> visibleAuthorIds) {
 
         UserProfile author = post.getAuthor();
         double recencyScore = 1.0 - Duration.between(post
@@ -220,7 +222,9 @@ public class FeedServiceMgr implements FeedService {
         );
     }
 
-    private List<Post> fetchHomeFeedPosts(Set<String> authorIds, FeedCursorCodec.FeedCursor pageCursor, int fetchSize) {
+    private List<Post> fetchHomeFeedPosts(Set<String> authorIds,
+                                          FeedCursorCodec.FeedCursor pageCursor,
+                                          int fetchSize) {
         PageRequest pageRequest = PageRequest.of(0, fetchSize);
         if (pageCursor == null) {
             return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds, pageRequest);
@@ -257,12 +261,14 @@ public class FeedServiceMgr implements FeedService {
         }
         List<FeedItemResponse> pageItems = cachedPage.feedItemResponses()
                 .stream().limit(pageSize).toList();
-        FeedSlice feedSlice = new FeedSlice(pageItems, cachedPage.feedItemResponses().size() > pageItems.size());
+        FeedSlice feedSlice = new FeedSlice(pageItems,
+                cachedPage.feedItemResponses().size() > pageItems.size());
         return Optional.of(feedSlice);
     }
 
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {
-        List<FollowRelationships> followRelations = followRelationshipsRepo.findByFollowed_Id(viewer.getUserId());
+        List<FollowRelationships> followRelations = followRelationshipsRepo
+                .findByFollowed_Id(viewer.getUserId());
         Set<String> allAuthorIds = new LinkedHashSet<>();
         Set<String> hotAuthorIds = new LinkedHashSet<>();
         Set<String> nonHotAuthorIds = new LinkedHashSet<>();
