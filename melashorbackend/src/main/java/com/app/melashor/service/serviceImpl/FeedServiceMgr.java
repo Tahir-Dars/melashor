@@ -1,5 +1,6 @@
 package com.app.melashor.service.serviceImpl;
 
+import com.app.melashor.domain.dto.TimeLineMode;
 import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.domain.model.FollowRelationships;
@@ -80,7 +81,19 @@ public class FeedServiceMgr implements FeedService {
         }
         List<Post> posts = fetchHomeFeedPosts(nonHotUserIds, pageCursor, pageSize + 1);
         FeedSlice slice = buildFeedSlice(posts, pageSize, userId, nonHotUserIds);
-        return null;
+        if (pageCursor == null && pageSize == FeedCacheServiceMgr.DEFAULT_PAGE_SIZE) {
+            TimeLinePageResponse pageResponse = new TimeLinePageResponse(
+                    userId,
+                    slice.itemResponses,
+                    TimeLineMode.HOME,
+                    Math.toIntExact(postRepository
+                            .countByAuthor_IdIn(nonHotUserIds)),
+                    slice.hasMore() && !slice.itemResponses.isEmpty()
+                            ? codecMgr.encode(slice.itemResponses().getLast()) : null
+            );
+            feedCacheService.cacheHomeFeed(pageResponse);
+        }
+        return new NormalFeedSliceResult(slice, "miss");
     }
 
     private FeedSlice buildFeedSlice(List<Post> posts, int pageSize,
@@ -114,7 +127,10 @@ public class FeedServiceMgr implements FeedService {
 
 
         return new FeedItemResponse(
-                post.getPostId(), author.getUserId(), author.getHandle(), author.getName(), post.getContent(), post.getCreatedAt(), rankingScore, deliveryStrategy, rankinOnReason
+                post.getPostId(), author.getUserId(),
+                author.getHandle(), author.getName(),
+                post.getContent(), post.getCreatedAt(),
+                rankingScore, deliveryStrategy, rankinOnReason
         );
     }
 
