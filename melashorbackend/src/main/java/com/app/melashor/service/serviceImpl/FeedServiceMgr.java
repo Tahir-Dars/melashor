@@ -33,7 +33,6 @@ public class FeedServiceMgr implements FeedService {
             Comparator.comparing(FeedItemResponse::createdAt)
                     .thenComparing(FeedItemResponse::postId)
                     .reversed();
-
     private final FeedMetricsService metricsService;
     private final UserProfileRepository userProfileRepository;
     private final FeedCursorCodecMgr codecMgr;
