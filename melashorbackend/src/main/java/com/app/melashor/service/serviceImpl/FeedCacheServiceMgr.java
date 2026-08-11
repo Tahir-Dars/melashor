@@ -43,7 +43,8 @@ public class FeedCacheServiceMgr implements FeedCacheService {
         return "feed:home " + userId;
     }
 
-    private void cacheHomeFeed(TimeLinePageResponse pageResponse) {
+    @Override
+    public void cacheHomeFeed(TimeLinePageResponse pageResponse) {
         writeHomeFeed(pageResponse);
         metricsService.recordCacheMutation("write_first_page");
     }

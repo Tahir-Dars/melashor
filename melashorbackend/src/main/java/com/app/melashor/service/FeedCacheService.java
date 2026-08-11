@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface FeedCacheService {
     Optional<TimeLinePageResponse> getHomeFeed(String userId);
+
+    void cacheHomeFeed(TimeLinePageResponse pageResponse);
 }
