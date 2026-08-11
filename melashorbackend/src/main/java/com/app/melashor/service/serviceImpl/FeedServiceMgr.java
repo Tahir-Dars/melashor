@@ -65,7 +65,12 @@ public class FeedServiceMgr implements FeedService {
 
     private FeedSlice getHotHomeFeedSlice(String userId, VisibleAuthors visibleAuthors,
                                           FeedCursorCodec.FeedCursor pageCursor, int pageSize) {
-        return null;
+        if (visibleAuthors.hotAuthorIds.isEmpty()) {
+            return new FeedSlice(List.of(), false);
+        }
+        List<Post> posts = fetchHomeFeedPosts(visibleAuthors.hotAuthorIds(), pageCursor, pageSize + 1);
+
+        return buildFeedSlice(posts, pageSize, userId, visibleAuthors.hotAuthorIds());
     }
 
     private NormalFeedSliceResult getNormalHomeFeedSlice(String userId, Set<String> nonHotUserIds,
