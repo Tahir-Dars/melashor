@@ -103,9 +103,19 @@ public class FeedServiceMgr implements FeedService {
         recencyScore /= 600.0;
         double hotUserPenalty = author.isHotUser() ? 0.15 : 0.0;
 
-//        double affinityBoost = visibleAuthorIds(author.getUserId(),  viewerId.equals(author.getUserId()));
+        double affinityBoost = visibleAuthorIds.contains(author.getUserId()) &&
+                viewerId.equals(author.getUserId()) ? 0.0 : 0.2;
+        double rankingScore = Math.round((recencyScore + affinityBoost + hotUserPenalty) * 100.0) / 100.0;
+        String deliveryStrategy = author.isHotUser() ? "hybrid-pull" : "fan-out-on-write";
 
-        return null;
+        String rankinOnReason = author.isHotUser()
+                ? "Hot user content is blended with pull-based bias to reduce write amplifications"
+                : "Recent content from followed accounts is promoted for freshness and affinity";
+
+
+        return new FeedItemResponse(
+                post.getPostId(), author.getUserId(), author.getHandle(), author.getName(), post.getContent(), post.getCreatedAt(), rankingScore, deliveryStrategy, rankinOnReason
+        );
     }
 
     private List<Post> fetchHomeFeedPosts(Set<String> authorIds, FeedCursorCodec.FeedCursor pageCursor, int fetchSize) {
@@ -149,15 +159,6 @@ public class FeedServiceMgr implements FeedService {
         return Optional.of(feedSlice);
     }
 
-    private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
-    }
-
-    private record FeedSlice(List<FeedItemResponse> itemResponses, boolean hasMore) {
-    }
-
-    private record NormalFeedSliceResult(FeedSlice slice, String cacheOutcome) {
-    }
-
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {
         List<FollowRelationships> followRelations = followRelationshipsRepo.findByFollowed_Id(viewer.getUserId());
         Set<String> allAuthorIds = new LinkedHashSet<>();
@@ -183,7 +184,6 @@ public class FeedServiceMgr implements FeedService {
         return new VisibleAuthors(allAuthorIds, hotAuthorIds, nonHotAuthorIds);
     }
 
-
     private int normalizedLimit(int limit) {
         if (limit <= 0) {
             return FeedCacheServiceMgr.DEFAULT_PAGE_SIZE;
@@ -194,5 +194,14 @@ public class FeedServiceMgr implements FeedService {
     private UserProfile getUser(String userId) {
         return userProfileRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found !!"));
+    }
+
+    private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
+    }
+
+    private record FeedSlice(List<FeedItemResponse> itemResponses, boolean hasMore) {
+    }
+
+    private record NormalFeedSliceResult(FeedSlice slice, String cacheOutcome) {
     }
 }
