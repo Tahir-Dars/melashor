@@ -22,15 +22,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class FeedServiceMgr implements FeedService {
+
+    private static final Comparator<FeedItemResponse> FEED_ORDER =
+            Comparator.comparing(FeedItemResponse::createdAt)
+                    .thenComparing(FeedItemResponse::postId)
+                    .reversed();
 
     private final FeedMetricsService metricsService;
     private final UserProfileRepository userProfileRepository;
@@ -56,9 +58,49 @@ public class FeedServiceMgr implements FeedService {
                     getNormalHomeFeedSlice(viewer.getUserId(), visibleAuthors.nonHotAuthorIds(), pageCursor, pageSize);
 
             FeedSlice hotSlice = getHotHomeFeedSlice(viewer.getUserId(), visibleAuthors.hotAuthorIds(), pageCursor, pageSize);
+            int totalItems = Math.toIntExact(postRepository.countByAuthor_IdIn(visibleAuthors.allAuthorIds));
+
+            TimeLinePageResponse pageResponse = mergeHomeFeedSlices(
+                    userId, totalItems, pageSize, normalFeedSliceResult.slice, hotSlice
+            );
+
+            metricsService.recordHomeFeedRequest(startedAtNanos,
+                    normalFeedSliceResult.cacheOutcome,
+                    determineMergeMode(normalFeedSliceResult.slice, hotSlice),
+                    pageResponse.nextCursor() != null,
+                    pageResponse.feedItemResponses().size());
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
             throw e;
+        }
+        return null;
+    }
+
+    private TimeLinePageResponse mergeHomeFeedSlices(String userId, int totalItems, int pageSize, FeedSlice normalSlice, FeedSlice hotSlice) {
+
+        List<FeedItemResponse> mergedItems = new ArrayList<>(pageSize + 1);
+
+        int normalIndex = 0;
+        int hotIndex = 0;
+        int normalItemsUsed = 0;
+        int hotItemsUsed = 0;
+
+        while (mergedItems.size() < pageSize + 1
+                && (normalIndex < normalSlice.itemResponses().size()
+                || hotIndex < hotSlice.itemResponses().size())) {
+            FeedItemResponse nextNormal = normalIndex < normalSlice.itemResponses().size()
+                    ? normalSlice.itemResponses().get(normalIndex)
+                    : null;
+            FeedItemResponse nextH0t = hotIndex < hotSlice.itemResponses().size()
+                    ? hotSlice.itemResponses().get(hotIndex)
+                    : null;
+
+            if (nextH0t == null || (nextNormal != null && FEED_ORDER.compare(nextNormal, nextH0t) <= 0)) {
+
+            } else {
+
+            }
+
         }
         return null;
     }
