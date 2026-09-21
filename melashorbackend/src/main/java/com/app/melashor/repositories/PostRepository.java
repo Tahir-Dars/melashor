@@ -22,15 +22,15 @@ public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByAuthor_IdOrderByCreatedAtDesc(String authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-   List<Post> findByAuthor_IdOrderByCreatedAtDescIdDesc(String authorId, Pageable pageable);
+    List<Post> findByAuthor_IdOrderByCreatedAtDescIdDesc(String authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    @Query(""" 
-             select p from Post p
-                         where p.author.userId in:authorIds
-                                     and(p.createdAt<:createdAt or (p.createdAt)=:createdAt
-                                                 and p.postId< :postId )
-                                                             order by p.createdAt desc, p.postId desc
+    @Query("""
+              select p from Post p
+                          where p.author.userId in:authorIds
+                                and(p.createdAt<:createdAt
+                                or (p.createdAt)=:createdAt and p.postId< :postId )
+                                                          order by p.createdAt desc, p.postId desc
             """)
     List<Post> findHomeFeedPageAfterCursor(@Param("authorIds") Set<String> authorIds,
                                            @Param("createdAt") Instant createdAt,
@@ -38,4 +38,18 @@ public interface PostRepository extends JpaRepository<Post, String> {
                                            Pageable pageable);
 
     long countByAuthor_IdIn(Set<String> nonHotUserIds);
+
+    @EntityGraph(attributePaths = "author")
+    @Query(""" 
+            select p from Post p
+                        where p.author.id =:authorId
+                                     and(p.createdAt <: createdAt
+                                                  or(p.createdAt=:created and p.postId<:postId))
+                                                             order by p.createdAt desc , p.id desc
+            """)
+    List<Post> findUserFeedPageAfterCursor(
+            @Param("authorId") String authorId,
+            @Param("createdAt") Instant createdAt,
+            @Param("postId") String postId,
+            Pageable pageable);
 }
