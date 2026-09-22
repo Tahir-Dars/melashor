@@ -22,7 +22,10 @@ public interface PostRepository extends JpaRepository<Post, String> {
     List<Post> findByAuthor_IdOrderByCreatedAtDesc(String authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    @Query("""
+   List<Post> findByAuthor_IdOrderByCreatedAtDescIdDesc(String authorId, Pageable pageable);
+
+    @EntityGraph(attributePaths = "author")
+    @Query(""" 
              select p from Post p
                          where p.author.userId in:authorIds
                                      and(p.createdAt<:createdAt or (p.createdAt)=:createdAt
