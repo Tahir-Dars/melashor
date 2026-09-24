@@ -3,6 +3,7 @@ package com.app.melashor.service.serviceImpl;
 import com.app.melashor.domain.dto.TimeLineMode;
 import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
+import com.app.melashor.domain.dto.record.UserProfileResponse;
 import com.app.melashor.domain.model.FollowRelationships;
 import com.app.melashor.domain.model.Post;
 import com.app.melashor.domain.model.UserProfile;
@@ -15,6 +16,7 @@ import com.app.melashor.service.FeedMetricsService;
 import com.app.melashor.service.FeedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +104,21 @@ public class FeedServiceMgr implements FeedService {
             throw exception;
         }
         return null;
+    }
+
+    @Override
+    public List<UserProfileResponse> getUser() {
+        return userProfileRepository.findAll(Sort.by("id")).stream().map(this::toUserProfileResponse).toList();
+    }
+
+    private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
+        return new UserProfileResponse(
+                userProfile.getUserId(),
+                userProfile.getHandle(),
+                userProfile.getName(),
+                userProfile.getProfileBio(),
+                userProfile.isHotUser()
+        );
     }
 
     private TimeLinePageResponse buildTimeLinePage(String timeLineOwnerId, TimeLineMode mode,
