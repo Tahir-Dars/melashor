@@ -12,4 +12,6 @@ public interface FollowRelationshipsRepository extends JpaRepository<FollowRelat
     List<FollowRelationships> findByFollowed_Id(String followedId);
 
     long countByFollower_Id(String followerId);
+
+    long contactByFollower_Id(String followerId);
 }

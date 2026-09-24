@@ -1,11 +1,9 @@
 package com.app.melashor.service.serviceImpl;
 
 import com.app.melashor.domain.dto.TimeLineMode;
-import com.app.melashor.domain.dto.record.FeedItemResponse;
-import com.app.melashor.domain.dto.record.FollowingResponse;
-import com.app.melashor.domain.dto.record.TimeLinePageResponse;
-import com.app.melashor.domain.dto.record.UserProfileResponse;
+import com.app.melashor.domain.dto.record.*;
 import com.app.melashor.domain.model.FollowRelationships;
+import com.app.melashor.domain.model.FollowRelationshipsId;
 import com.app.melashor.domain.model.Post;
 import com.app.melashor.domain.model.UserProfile;
 import com.app.melashor.repositories.FollowRelationshipsRepository;
@@ -119,6 +117,54 @@ public class FeedServiceMgr implements FeedService {
                 .map(relationships -> relationships.getFollowed().getUserId()).toList();
 
         return new FollowingResponse(followerId, targetUserIds, targetUserIds.size());
+    }
+
+    @Override
+    public FollowResponse follow(String followerId, String userId) {
+        long startedAtNanos = metricsService.startTime();
+        try {
+            validateFollowRequest(followerId, userId);
+
+            UserProfile follower = getUser(followerId);
+            UserProfile user = getUser(userId);
+
+            FollowRelationshipsId relationshipsId = new FollowRelationshipsId(followerId, userId);
+
+            boolean createdRelation= false;
+
+            if (followRelationshipsRepo.existsById(relationshipsId)){
+                followRelationshipsRepo.save(new FollowRelationships(follower,user));
+                createdRelation=true;
+            }
+
+            feedCacheService.evictHomeFeed(followerId);
+            metricsService.recordFollowRequest(startedAtNanos,"follow", createdRelation);
+
+            return new FollowResponse(followerId, userId,
+                    true,
+                    Math.toIntExact(
+                            followRelationshipsRepo.contactByFollower_Id(followerId)
+                    ));
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    private void validateFollowRequest(String followerId, String userId) {
+        if (followerId.equals(userId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Users can not follow themselves"
+            );
+        }
+        getUser(followerId);
+        getUser(userId);
+    }
+
+    @Override
+    public FollowResponse unFollow(String followerId, String userId) {
+        return null;
     }
 
     private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {

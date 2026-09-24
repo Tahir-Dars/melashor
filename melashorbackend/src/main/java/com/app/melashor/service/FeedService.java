@@ -1,5 +1,6 @@
 package com.app.melashor.service;
 
+import com.app.melashor.domain.dto.record.FollowResponse;
 import com.app.melashor.domain.dto.record.FollowingResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.domain.dto.record.UserProfileResponse;
@@ -14,4 +15,8 @@ public interface FeedService {
     List<UserProfileResponse> getUser();
 
     FollowingResponse getFollowing(String followerId);
+
+    FollowResponse follow(String followerId, String userId);
+
+    FollowResponse unFollow(String followerId, String userId);
 }

@@ -49,6 +49,14 @@ public class FeedCacheServiceMgr implements FeedCacheService {
         metricsService.recordCacheMutation("write_first_page");
     }
 
+    @Override
+    public void evictHomeFeed(String userId) {
+//        try {
+//
+//        }
+
+    }
+
     private void writeHomeFeed(TimeLinePageResponse timeLinePageResponse) {
         try {
             String payload = objectMapper.writeValueAsString(timeLinePageResponse);

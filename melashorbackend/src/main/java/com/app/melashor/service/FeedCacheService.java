@@ -8,4 +8,6 @@ public interface FeedCacheService {
     Optional<TimeLinePageResponse> getHomeFeed(String userId);
 
     void cacheHomeFeed(TimeLinePageResponse pageResponse);
+
+    void evictHomeFeed(String followerId);
 }
