@@ -166,7 +166,26 @@ public class FeedServiceMgr implements FeedService {
 
     @Override
     public FollowResponse unFollow(String followerId, String userId) {
-        return null;
+        long startAtNanos=metricsService.startTime();
+
+        try{
+            validateFollowRequest(followerId,userId);
+            FollowRelationshipsId relationshipsId= new FollowRelationshipsId(followerId,userId);
+            boolean isRelationship=followRelationshipsRepo.existsById(relationshipsId);
+
+            followRelationshipsRepo.deleteById(relationshipsId);
+            feedCacheService.evictHomeFeed(followerId);
+            metricsService.recordFollowRequest(startAtNanos,"unfollow",isRelationship);
+
+            return new FollowResponse(followerId,userId,false,
+                    Math.toIntExact(
+                            followRelationshipsRepo.countByFollower_Id(followerId)
+                    )
+            );
+        } catch(ResponseStatusException e){
+            metricsService.recordServiceError("unfollow",e.getStatusCode().toString());
+            throw e;
+        }
     }
 
     private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
