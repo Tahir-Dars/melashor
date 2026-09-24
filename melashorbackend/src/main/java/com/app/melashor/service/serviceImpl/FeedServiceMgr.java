@@ -2,6 +2,7 @@ package com.app.melashor.service.serviceImpl;
 
 import com.app.melashor.domain.dto.TimeLineMode;
 import com.app.melashor.domain.dto.record.FeedItemResponse;
+import com.app.melashor.domain.dto.record.FollowingResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.domain.dto.record.UserProfileResponse;
 import com.app.melashor.domain.model.FollowRelationships;
@@ -109,6 +110,15 @@ public class FeedServiceMgr implements FeedService {
     @Override
     public List<UserProfileResponse> getUser() {
         return userProfileRepository.findAll(Sort.by("id")).stream().map(this::toUserProfileResponse).toList();
+    }
+
+    @Override
+    public FollowingResponse getFollowing(String followerId) {
+        getUser(followerId);
+        List<String> targetUserIds = followRelationshipsRepo.findByFollower_Id(followerId).stream()
+                .map(relationships -> relationships.getFollowed().getUserId()).toList();
+
+        return new FollowingResponse(followerId, targetUserIds, targetUserIds.size());
     }
 
     private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
