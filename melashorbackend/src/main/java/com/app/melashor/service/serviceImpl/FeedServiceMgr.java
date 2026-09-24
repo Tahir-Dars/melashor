@@ -68,7 +68,7 @@ public class FeedServiceMgr implements FeedService {
                     normalFeedSliceResult.cacheOutcome,
                     determineMergeMode(normalFeedSliceResult.slice, hotSlice),
                     pageResponse.nextCursor() != null,
-                    pageResponse.feedItemResponses().size());
+                    pageResponse.feedItems().size());
             return pageResponse;
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("get_home_feed", e.getStatusCode().toString());
@@ -78,7 +78,54 @@ public class FeedServiceMgr implements FeedService {
 
     @Override
     public TimeLinePageResponse getUserFeed(String userId, String cursor, int limit) {
+        long startedAtNanos = metricsService.startTime();
+        int pageSize = normalizedLimit(limit);
+
+        metricsService.recordHomeFeedRequestedPageSize(limit, pageSize);
+
+        try {
+            getUser(userId);
+            FeedCursorCodec.FeedCursor pageCursor = codecMgr.parse(cursor);
+            List<Post> posts = fetchUserFeedPosts(userId, pageCursor, pageSize + 1);
+            int totalItems = Math.toIntExact(postRepository.countByAuthor_Id(userId));
+
+            TimeLinePageResponse response = buildTimeLinePage(
+                    userId, TimeLineMode.USER, posts, totalItems, pageSize
+            );
+
+            metricsService.recordUserFeedRequest(startedAtNanos, response.nextCursor() != null, response.feedItems().size());
+        } catch (ResponseStatusException exception) {
+            metricsService.recordServiceError(
+                    "get_user_feed",
+                    exception.getStatusCode().toString()
+            );
+            throw exception;
+        }
         return null;
+    }
+
+    private TimeLinePageResponse buildTimeLinePage(String timeLineOwnerId, TimeLineMode mode,
+                                                   List<Post> posts, int totalItems, int pageSize) {
+        boolean hasMore = posts.size() > pageSize;
+        List<Post> pagePosts = hasMore ? posts.subList(0, pageSize) : posts;
+
+        List<FeedItemResponse> pageItems = pagePosts.stream()
+                .map(post -> toFeedItems(post, timeLineOwnerId, Set.of(timeLineOwnerId)))
+                .toList();
+
+        String nextCursor = hasMore && !pageItems.isEmpty()
+                ? codecMgr.encode(pageItems.getLast()) : null;
+
+        return new TimeLinePageResponse(timeLineOwnerId, pageItems, mode, totalItems, nextCursor);
+    }
+
+    private List<Post> fetchUserFeedPosts(String userId, FeedCursorCodec.FeedCursor pageCursor, int sizeToBeFetched) {
+        PageRequest pageRequest = PageRequest.of(0, sizeToBeFetched);
+        if (pageCursor == null) {
+            return postRepository.findByAuthor_IdOrderByCreatedAtDescIdDesc(userId, pageRequest);
+        }
+
+        return postRepository.findUserFeedPageAfterCursor(userId, pageCursor.createdAt(), pageCursor.postId(), pageRequest);
     }
 
     private TimeLinePageResponse mergeHomeFeedSlices(String userId, int totalItems, int pageSize, FeedSlice normalSlice, FeedSlice hotSlice) {
@@ -261,13 +308,13 @@ public class FeedServiceMgr implements FeedService {
     }
 
     private Optional<FeedSlice> adaptCachedFirstPage(TimeLinePageResponse cachedPage, int pageSize) {
-        if (cachedPage.feedItemResponses().size() < pageSize || cachedPage.nextCursor() != null) {
+        if (cachedPage.feedItems().size() < pageSize || cachedPage.nextCursor() != null) {
             return Optional.empty();
         }
-        List<FeedItemResponse> pageItems = cachedPage.feedItemResponses()
+        List<FeedItemResponse> pageItems = cachedPage.feedItems()
                 .stream().limit(pageSize).toList();
         FeedSlice feedSlice = new FeedSlice(pageItems,
-                cachedPage.feedItemResponses().size() > pageItems.size());
+                cachedPage.feedItems().size() > pageItems.size());
         return Optional.of(feedSlice);
     }
 
