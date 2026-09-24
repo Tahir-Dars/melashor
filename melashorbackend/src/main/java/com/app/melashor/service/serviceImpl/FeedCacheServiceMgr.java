@@ -51,9 +51,12 @@ public class FeedCacheServiceMgr implements FeedCacheService {
 
     @Override
     public void evictHomeFeed(String userId) {
-//        try {
-//
-//        }
+        try {
+            redisTemplate.delete(homeFeedKey(userId));
+            metricsService.recordCacheMutation("evict");
+        } catch (Exception e) {
+            log.error("Error occurred while processing request", e);
+        }
 
     }
 

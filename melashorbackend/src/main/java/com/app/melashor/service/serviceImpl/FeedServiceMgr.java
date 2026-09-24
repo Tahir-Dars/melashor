@@ -130,25 +130,27 @@ public class FeedServiceMgr implements FeedService {
 
             FollowRelationshipsId relationshipsId = new FollowRelationshipsId(followerId, userId);
 
-            boolean createdRelation= false;
+            boolean createdRelation = false;
 
-            if (followRelationshipsRepo.existsById(relationshipsId)){
-                followRelationshipsRepo.save(new FollowRelationships(follower,user));
-                createdRelation=true;
+            if (followRelationshipsRepo.existsById(relationshipsId)) {
+                followRelationshipsRepo.save(new FollowRelationships(follower, user));
+                createdRelation = true;
             }
 
             feedCacheService.evictHomeFeed(followerId);
-            metricsService.recordFollowRequest(startedAtNanos,"follow", createdRelation);
+            metricsService.recordFollowRequest(startedAtNanos, "follow", createdRelation);
 
             return new FollowResponse(followerId, userId,
                     true,
                     Math.toIntExact(
                             followRelationshipsRepo.contactByFollower_Id(followerId)
                     ));
-        } catch (Exception e) {
-
+        } catch (ResponseStatusException e) {
+            metricsService.recordServiceError(
+                    "follow", e.getStatusCode().toString()
+            );
+            throw e;
         }
-        return null;
     }
 
     private void validateFollowRequest(String followerId, String userId) {
