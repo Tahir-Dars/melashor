@@ -1,9 +1,7 @@
 package com.app.melashor.service;
 
-import com.app.melashor.domain.dto.record.FollowResponse;
-import com.app.melashor.domain.dto.record.FollowingResponse;
-import com.app.melashor.domain.dto.record.TimeLinePageResponse;
-import com.app.melashor.domain.dto.record.UserProfileResponse;
+import com.app.melashor.domain.dto.record.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -19,4 +17,6 @@ public interface FeedService {
     FollowResponse follow(String followerId, String userId);
 
     FollowResponse unFollow(String followerId, String userId);
+
+    PostResponse createPost(@Valid CreatePostRequest postRequest);
 }

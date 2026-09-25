@@ -188,6 +188,27 @@ public class FeedServiceMgr implements FeedService {
         }
     }
 
+    @Override
+    @Transactional
+    public PostResponse createPost(CreatePostRequest postRequest) {
+        long startAtNanos = metricsService.startTime();
+        UserProfile author = getUser(postRequest.authorId());
+        String authorType = author.isHotUser() ? "hot" : "normal";
+
+        String normalizedContent = postRequest.content().trim();
+
+        try {
+            String requestMatch=hashCreatePostRequest(postRequest.authorId(),normalizedContent);
+        } catch () {
+
+        }
+
+    }
+
+//    private record IdempotencyPostAttempt(Optional<>){
+//
+//    }
+
     private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
         return new UserProfileResponse(
                 userProfile.getUserId(),
