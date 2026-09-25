@@ -24,12 +24,6 @@ public class Post {
     @Column(nullable = false)
     private Instant createdAt;
 
-    public Post(String postId, UserProfile author, String content) {
-        this.postId = postId;
-        this.author = author;
-        this.content = content;
-    }
-
     @PrePersist
     void onCreate() {
         if (createdAt == null) {
