@@ -1,4 +1,4 @@
-package com.app.melashor.domain.dto.record;
+package com.app.melashor.domain.dto.classses;
 
 import com.app.melashor.domain.dto.PostCreationStatus;
 import jakarta.persistence.*;
