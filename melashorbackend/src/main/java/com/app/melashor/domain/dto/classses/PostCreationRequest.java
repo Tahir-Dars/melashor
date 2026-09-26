@@ -9,7 +9,11 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "post_creation_requests")
+@Table(
+        name = "post_creation_requests",
+        uniqueConstraints = @UniqueConstraint(name = "uk_post_creation_user_key",
+                columnNames = {"user_id", "idempotency_key"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,7 +39,31 @@ public class PostCreationRequest {
     @Column(name = "post_id")
     private String postId;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    public PostCreationRequest(String userId, String idempotencyKey, String requestMatch) {
+        this.userId = userId;
+        this.idempotencyKey = idempotencyKey;
+        this.requestMatch = requestMatch;
+        this.status = PostCreationStatus.IN_PROGRESS;
+    }
+
+    @PrePersist
+    void atCreate() {
+        Instant now = Instant.now();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+    }
+
+    public void markSucceeded(String postId) {
+        this.postId = postId;
+        this.status = PostCreationStatus.SUCCEEDED;
+        this.updatedAt = Instant.now();
+    }
 }
