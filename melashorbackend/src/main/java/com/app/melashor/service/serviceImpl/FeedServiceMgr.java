@@ -210,11 +210,28 @@ public class FeedServiceMgr implements FeedService {
             IdempotencyPostAttempt attempt = resolveCreatePostAttempt(
                     postRequest.authorId(), postRequest.idempotencyKey(), requestHash
             );
-            if (attempt.postResponse().isPresent()){
-                metricsService.recordP
-            }
-        } catch () {
+            if (attempt.postResponse().isPresent()) {
+                metricsService.recordPostCreation(startAtNanos, authorType, "replay");
 
+                return attempt.postResponse.get();
+            }
+
+            if (attempt.isProgress()) {
+                metricsService.recordPostCreation(startAtNanos, authorType, "in_progress");
+
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Post Creation already in progress");
+            }
+
+
+            Post post = postRepository.save(Post.builder()
+                    .postId(UUID.randomUUID().toString())
+                    .author(author)
+                    .content(normalizedContent).build());
+
+            return toPostResponse(post);
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Issue with the Post Creation Request", e);
         }
 
     }
