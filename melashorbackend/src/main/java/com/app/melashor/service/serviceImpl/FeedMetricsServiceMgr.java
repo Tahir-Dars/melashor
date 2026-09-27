@@ -147,4 +147,18 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
         meterRegistry.counter("feedme.feed.cache.mutations", "action", action).increment();
     }
 
+    public void recordPostCreation(long startAtNanos, String authorType, String idempotencyOutCome) {
+        Timer.builder("feedme.posts.create.latency")
+                .description("Post Creation Latency")
+                .tag("author_type", authorType)
+                .register(meterRegistry)
+                .record(System.nanoTime() - startAtNanos, TimeUnit.NANOSECONDS);
+
+        Counter.builder("feedme.posts.create.requests").
+                description("Post Creation requests")
+                .tag("idempotency_outcome", idempotencyOutCome)
+                .register(meterRegistry)
+                .increment();
+    }
+
 }
