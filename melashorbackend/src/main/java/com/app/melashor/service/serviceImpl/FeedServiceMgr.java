@@ -471,6 +471,15 @@ public class FeedServiceMgr implements FeedService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found !!"));
     }
 
+    private PostResponse toPostResponse(Post post) {
+        UserProfile author = post.getAuthor();
+
+        return new PostResponse(
+                post.getPostId(), author.getUserId(), author.getName(),
+                author.getHandle(), post.getContent(), post.getCreatedAt()
+        );
+    }
+
     private record VisibleAuthors(Set<String> allAuthorIds, Set<String> hotAuthorIds, Set<String> nonHotAuthorIds) {
     }
 
