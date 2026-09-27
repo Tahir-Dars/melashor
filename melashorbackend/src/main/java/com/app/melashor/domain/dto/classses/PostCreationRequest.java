@@ -30,7 +30,7 @@ public class PostCreationRequest {
     private String idempotencyKey;
 
     @Column(name = "request_hash", nullable = false, length = 64)
-    private String requestMatch;
+    private String requestHash;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -48,7 +48,7 @@ public class PostCreationRequest {
     public PostCreationRequest(String userId, String idempotencyKey, String requestMatch) {
         this.userId = userId;
         this.idempotencyKey = idempotencyKey;
-        this.requestMatch = requestMatch;
+        this.requestHash = requestMatch;
         this.status = PostCreationStatus.IN_PROGRESS;
     }
 
