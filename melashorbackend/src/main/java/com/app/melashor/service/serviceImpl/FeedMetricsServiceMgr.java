@@ -147,6 +147,7 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
         meterRegistry.counter("feedme.feed.cache.mutations", "action", action).increment();
     }
 
+    @Override
     public void recordPostCreation(long startAtNanos, String authorType, String idempotencyOutCome) {
         Timer.builder("feedme.posts.create.latency")
                 .description("Post Creation Latency")
