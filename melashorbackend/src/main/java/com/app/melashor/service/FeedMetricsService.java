@@ -23,5 +23,8 @@ public interface FeedMetricsService {
     void recordServiceError(String operation, String statusCode);
 
     void recordDeliveryPath(String deliveryPath);
+
     void recordCacheMutation(String action);
+
+    void recordPostCreation(long startAtNanos, String authorType, String idempotencyOutCome);
 }

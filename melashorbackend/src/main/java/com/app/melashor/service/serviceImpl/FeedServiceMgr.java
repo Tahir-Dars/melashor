@@ -1,19 +1,23 @@
 package com.app.melashor.service.serviceImpl;
 
 import com.app.melashor.domain.dto.TimeLineMode;
+import com.app.melashor.domain.dto.classses.PostCreationRequest;
 import com.app.melashor.domain.dto.record.*;
 import com.app.melashor.domain.model.FollowRelationships;
 import com.app.melashor.domain.model.FollowRelationshipsId;
 import com.app.melashor.domain.model.Post;
 import com.app.melashor.domain.model.UserProfile;
 import com.app.melashor.repositories.FollowRelationshipsRepository;
+import com.app.melashor.repositories.PostCreationRequestRepository;
 import com.app.melashor.repositories.PostRepository;
 import com.app.melashor.repositories.UserProfileRepository;
 import com.app.melashor.service.FeedCacheService;
 import com.app.melashor.service.FeedCursorCodec;
 import com.app.melashor.service.FeedMetricsService;
 import com.app.melashor.service.FeedService;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -21,6 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -41,6 +48,7 @@ public class FeedServiceMgr implements FeedService {
     private final FollowRelationshipsRepository followRelationshipsRepo;
     private final FeedCacheService feedCacheService;
     private final PostRepository postRepository;
+    private final PostCreationRequestRepository postCreationRequestRepository;
 
 
     @Override
@@ -198,16 +206,90 @@ public class FeedServiceMgr implements FeedService {
         String normalizedContent = postRequest.content().trim();
 
         try {
-            String requestMatch=hashCreatePostRequest(postRequest.authorId(),normalizedContent);
+            String requestHash = hashCreatePostRequest(postRequest.authorId(), normalizedContent);
+            IdempotencyPostAttempt attempt = resolveCreatePostAttempt(
+                    postRequest.authorId(), postRequest.idempotencyKey(), requestHash
+            );
+            if (attempt.postResponse().isPresent()){
+                metricsService.recordP
+            }
         } catch () {
 
         }
 
     }
 
-//    private record IdempotencyPostAttempt(Optional<>){
-//
-//    }
+    private IdempotencyPostAttempt resolveCreatePostAttempt(
+            @NotBlank String authorId, @NotBlank String idempotencyKey, String requestHash) {
+        Optional<PostCreationRequest> existingRequest = postCreationRequestRepository
+                .findByUserIdAndIdempotencyKey(authorId, idempotencyKey);
+        if (existingRequest.isPresent()) {
+            return handleExistingCreatePostRequest(existingRequest.get(), requestHash);
+        }
+        try {
+            PostCreationRequest record = new PostCreationRequest(authorId, idempotencyKey, requestHash);
+            postCreationRequestRepository.saveAndFlush(record);
+            return new IdempotencyPostAttempt(
+                    Optional.of(record),
+                    Optional.empty(),
+                    false
+            );
+
+        } catch (DataIntegrityViolationException e) {
+            PostCreationRequest existing = postCreationRequestRepository.
+                    findByUserIdAndIdempotencyKey(authorId, idempotencyKey)
+                    .orElseThrow(() -> e);
+
+            return handleExistingCreatePostRequest(existing, requestHash);
+        }
+    }
+
+    private IdempotencyPostAttempt handleExistingCreatePostRequest(PostCreationRequest existing, String requestHash) {
+        PostCreationRequest validatedRecord = validateAndReuseCreatePostRequest(existing, requestHash);
+
+        return switch (validatedRecord.getStatus()) {
+            case SUCCEEDED -> new IdempotencyPostAttempt(Optional.empty(),
+                    Optional.of(getPost(validatedRecord.getPostId())), false);
+            case IN_PROGRESS -> new IdempotencyPostAttempt(Optional.empty(), Optional.empty(), true);
+        };
+    }
+
+    private PostResponse getPost(String postId) {
+        return postRepository.findById(postId)
+                .map(this::toPostResponse).
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+    }
+
+    private PostCreationRequest validateAndReuseCreatePostRequest(PostCreationRequest existing, String requestHash) {
+        if (!existing.getRequestHash().equals(requestHash)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Idempotency key already used for a different post request");
+        }
+
+        return existing;
+    }
+
+    private String hashCreatePostRequest(@NotBlank String authorId, String normalizedContent) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 should be available", e);
+        }
+
+        byte[] hash = digest.digest((authorId + "\n" + normalizedContent).getBytes(StandardCharsets.UTF_8));
+        StringBuilder builder = new StringBuilder(hash.length * 2);
+
+        for (byte hashByte : hash) {
+            builder.append(String.format("%02x", hashByte));
+        }
+
+        return builder.toString();
+    }
+
+    private record IdempotencyPostAttempt(Optional<PostCreationRequest> requestOfCreation,
+                                          Optional<PostResponse> postResponse, boolean isProgress) {
+
+    }
 
     private UserProfileResponse toUserProfileResponse(UserProfile userProfile) {
         return new UserProfileResponse(
