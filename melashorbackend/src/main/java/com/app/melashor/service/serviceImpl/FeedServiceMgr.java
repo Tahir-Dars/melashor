@@ -11,10 +11,7 @@ import com.app.melashor.repositories.FollowRelationshipsRepository;
 import com.app.melashor.repositories.PostCreationRequestRepository;
 import com.app.melashor.repositories.PostRepository;
 import com.app.melashor.repositories.UserProfileRepository;
-import com.app.melashor.service.FeedCacheService;
-import com.app.melashor.service.FeedCursorCodec;
-import com.app.melashor.service.FeedMetricsService;
-import com.app.melashor.service.FeedService;
+import com.app.melashor.service.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,6 +46,7 @@ public class FeedServiceMgr implements FeedService {
     private final FeedCacheService feedCacheService;
     private final PostRepository postRepository;
     private final PostCreationRequestRepository postCreationRequestRepository;
+    private final FeedEventOutboxService feedEventOutboxService;
 
 
     @Override
@@ -228,10 +226,23 @@ public class FeedServiceMgr implements FeedService {
                     .author(author)
                     .content(normalizedContent).build());
 
+            feedEventOutboxService.enqueuePostCreated(post);
+
+            attempt.requestOfCreation().orElseThrow().markSucceeded(post.getPostId());
+
+            metricsService.recordPostCreation(startAtNanos, authorType, "new");
+
             return toPostResponse(post);
 
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Issue with the Post Creation Request", e);
+        } catch (ResponseStatusException e) {
+            if (e.getStatusCode().equals(HttpStatus.CONFLICT)
+                    && e.getReason() != null
+                    && e.getReason().contains("Idempotency Key")) {
+                metricsService.recordPostCreation(startAtNanos, authorType, "conflict");
+            }
+
+            metricsService.recordServiceError("create_post", e.getStatusCode().toString());
+            throw e;
         }
 
     }
