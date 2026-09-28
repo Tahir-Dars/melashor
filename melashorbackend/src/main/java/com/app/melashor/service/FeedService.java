@@ -19,4 +19,6 @@ public interface FeedService {
     FollowResponse unFollow(String followerId, String userId);
 
     PostResponse createPost(@Valid CreatePostRequest postRequest);
+
+    PostResponse getPost(String postId);
 }

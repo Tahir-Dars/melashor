@@ -20,4 +20,9 @@ public class PostController {
     public PostResponse createPost(@Valid @RequestBody CreatePostRequest postRequest) {
         return feedService.createPost(postRequest);
     }
+
+    @GetMapping("/{postId}")
+    public PostResponse getPost(@PathVariable String postId) {
+        return feedService.getPost(postId);
+    }
 }
