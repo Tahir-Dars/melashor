@@ -347,7 +347,7 @@ public class FeedServiceMgr implements FeedService {
     private List<Post> fetchUserFeedPosts(String userId, FeedCursorCodec.FeedCursor pageCursor, int sizeToBeFetched) {
         PageRequest pageRequest = PageRequest.of(0, sizeToBeFetched);
         if (pageCursor == null) {
-            return postRepository.findByAuthor_IdOrderByCreatedAtDescIdDesc(userId, pageRequest);
+            return postRepository.findByAuthor_UserIdOrderByCreatedAtDescIdDesc(userId, pageRequest);
         }
 
         return postRepository.findUserFeedPageAfterCursor(userId, pageCursor.createdAt(), pageCursor.postId(), pageRequest);
@@ -504,7 +504,7 @@ public class FeedServiceMgr implements FeedService {
                                           int fetchSize) {
         PageRequest pageRequest = PageRequest.of(0, fetchSize);
         if (pageCursor == null) {
-            return postRepository.findByAuthor_IdInOrderByCreatedAtDesc(authorIds, pageRequest);
+            return postRepository.findByAuthor_UserIdInOrderByCreatedAtDesc(authorIds, pageRequest);
         }
         return postRepository.findHomeFeedPageAfterCursor(authorIds, pageCursor.createdAt(), pageCursor.postId(), pageRequest);
     }

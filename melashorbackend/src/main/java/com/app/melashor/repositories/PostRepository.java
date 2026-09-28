@@ -16,13 +16,10 @@ import java.util.Set;
 @Repository
 public interface PostRepository extends JpaRepository<Post, String> {
     @EntityGraph(attributePaths = "author")
-    List<Post> findByAuthor_IdInOrderByCreatedAtDesc(Collection<String> authorIds, Pageable pageable);
+    List<Post> findByAuthor_UserIdInOrderByCreatedAtDesc(Collection<String> authorIds, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
-    List<Post> findByAuthor_IdOrderByCreatedAtDesc(String authorId, Pageable pageable);
-
-    @EntityGraph(attributePaths = "author")
-    List<Post> findByAuthor_IdOrderByCreatedAtDescIdDesc(String authorId, Pageable pageable);
+    List<Post> findByAuthor_UserIdOrderByCreatedAtDescIdDesc(String authorId, Pageable pageable);
 
     @EntityGraph(attributePaths = "author")
     @Query("""
