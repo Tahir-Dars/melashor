@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 public class FeedController {
     private final FeedService feedService;
 
-    @GetMapping
+    @GetMapping("/home")
     public TimeLinePageResponse getHomeFeed(
             @RequestParam String userId,
             @RequestParam(required = false) String cursor,
@@ -20,13 +20,13 @@ public class FeedController {
         return feedService.getHomeFeed(userId, cursor, limit);
     }
 
-    @GetMapping
+    @GetMapping("/userfeed")
     public TimeLinePageResponse getUserFeed(
             @PathVariable String userId,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "5") int limit
     ) {
-        return feedService.getUserFeed(userId,cursor,limit);
+        return feedService.getUserFeed(userId, cursor, limit);
     }
 
 }
