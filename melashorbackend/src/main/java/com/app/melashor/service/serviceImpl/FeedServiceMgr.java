@@ -65,7 +65,7 @@ public class FeedServiceMgr implements FeedService {
                     getNormalHomeFeedSlice(viewer.getUserId(), visibleAuthors.nonHotAuthorIds(), pageCursor, pageSize);
 
             FeedSlice hotSlice = getHotHomeFeedSlice(viewer.getUserId(), visibleAuthors.hotAuthorIds(), pageCursor, pageSize);
-            int totalItems = Math.toIntExact(postRepository.countByAuthor_IdIn(visibleAuthors.allAuthorIds));
+            int totalItems = Math.toIntExact(postRepository.countByAuthor_UserIdIn(visibleAuthors.allAuthorIds));
 
             TimeLinePageResponse pageResponse = mergeHomeFeedSlices(
                     userId, totalItems, pageSize, normalFeedSliceResult.slice, hotSlice
@@ -94,7 +94,7 @@ public class FeedServiceMgr implements FeedService {
             getUser(userId);
             FeedCursorCodec.FeedCursor pageCursor = codecMgr.parse(cursor);
             List<Post> posts = fetchUserFeedPosts(userId, pageCursor, pageSize + 1);
-            int totalItems = Math.toIntExact(postRepository.countByAuthor_Id(userId));
+            int totalItems = Math.toIntExact(postRepository.countByAuthor_UserId(userId));
 
             TimeLinePageResponse response = buildTimeLinePage(
                     userId, TimeLineMode.USER, posts, totalItems, pageSize
@@ -347,7 +347,7 @@ public class FeedServiceMgr implements FeedService {
     private List<Post> fetchUserFeedPosts(String userId, FeedCursorCodec.FeedCursor pageCursor, int sizeToBeFetched) {
         PageRequest pageRequest = PageRequest.of(0, sizeToBeFetched);
         if (pageCursor == null) {
-            return postRepository.findByAuthor_UserIdOrderByCreatedAtDescIdDesc(userId, pageRequest);
+            return postRepository.findByAuthor_UserIdOrderByCreatedAtDescPostIdDesc(userId, pageRequest);
         }
 
         return postRepository.findUserFeedPageAfterCursor(userId, pageCursor.createdAt(), pageCursor.postId(), pageRequest);
@@ -451,7 +451,7 @@ public class FeedServiceMgr implements FeedService {
                     slice.itemResponses,
                     TimeLineMode.HOME,
                     Math.toIntExact(postRepository
-                            .countByAuthor_IdIn(nonHotUserIds)),
+                            .countByAuthor_UserIdIn(nonHotUserIds)),
                     slice.hasMore() && !slice.itemResponses.isEmpty()
                             ? codecMgr.encode(slice.itemResponses().getLast()) : null
             );
