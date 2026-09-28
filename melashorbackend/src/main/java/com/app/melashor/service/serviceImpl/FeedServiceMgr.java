@@ -149,7 +149,7 @@ public class FeedServiceMgr implements FeedService {
             return new FollowResponse(followerId, userId,
                     true,
                     Math.toIntExact(
-                            followRelationshipsRepo.contactByFollower_UserId(followerId)
+                            followRelationshipsRepo.countByFollower_UserId(followerId)
                     ));
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError(
