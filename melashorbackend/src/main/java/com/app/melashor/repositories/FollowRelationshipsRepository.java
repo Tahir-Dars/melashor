@@ -7,11 +7,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface FollowRelationshipsRepository extends JpaRepository<FollowRelationships, FollowRelationshipsId> {
-    List<FollowRelationships> findByFollower_Id(String followerId);
+    List<FollowRelationships> findByFollower_UserId(String followerId);
 
-    List<FollowRelationships> findByFollowed_Id(String followedId);
+    List<FollowRelationships> findByFollowed_UserId(String followedId);
 
-    long countByFollower_Id(String followerId);
+    long countByFollower_UserId(String followerId);
 
-    long contactByFollower_Id(String followerId);
+    long contactByFollower_UserId(String followerId);
 }

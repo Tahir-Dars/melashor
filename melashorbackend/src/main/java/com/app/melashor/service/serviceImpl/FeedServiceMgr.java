@@ -119,7 +119,7 @@ public class FeedServiceMgr implements FeedService {
     @Override
     public FollowingResponse getFollowing(String followerId) {
         getUser(followerId);
-        List<String> targetUserIds = followRelationshipsRepo.findByFollower_Id(followerId).stream()
+        List<String> targetUserIds = followRelationshipsRepo.findByFollower_UserId(followerId).stream()
                 .map(relationships -> relationships.getFollowed().getUserId()).toList();
 
         return new FollowingResponse(followerId, targetUserIds, targetUserIds.size());
@@ -149,7 +149,7 @@ public class FeedServiceMgr implements FeedService {
             return new FollowResponse(followerId, userId,
                     true,
                     Math.toIntExact(
-                            followRelationshipsRepo.contactByFollower_Id(followerId)
+                            followRelationshipsRepo.contactByFollower_UserId(followerId)
                     ));
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError(
@@ -185,7 +185,7 @@ public class FeedServiceMgr implements FeedService {
 
             return new FollowResponse(followerId, userId, false,
                     Math.toIntExact(
-                            followRelationshipsRepo.countByFollower_Id(followerId)
+                            followRelationshipsRepo.countByFollower_UserId(followerId)
                     )
             );
         } catch (ResponseStatusException e) {
@@ -545,7 +545,7 @@ public class FeedServiceMgr implements FeedService {
 
     private VisibleAuthors getVisibleAuthors(UserProfile viewer) {
         List<FollowRelationships> followRelations = followRelationshipsRepo
-                .findByFollowed_Id(viewer.getUserId());
+                .findByFollowed_UserId(viewer.getUserId());
         Set<String> allAuthorIds = new LinkedHashSet<>();
         Set<String> hotAuthorIds = new LinkedHashSet<>();
         Set<String> nonHotAuthorIds = new LinkedHashSet<>();
