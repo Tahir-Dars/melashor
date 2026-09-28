@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface OutboxEventRepository extends JpaRepository<OutBoxEvent, String> {
 
-    List<OutBoxEvent> findByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(
+    List<OutBoxEvent> findByStatusAndNextAttemptTimeLessThanEqualOrderByCreatedAtAsc(
             OutboxEventStatus status,
             Instant nextAttempt,
             Pageable pageable

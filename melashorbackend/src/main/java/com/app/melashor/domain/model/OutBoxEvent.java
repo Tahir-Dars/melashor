@@ -19,7 +19,7 @@ public class OutBoxEvent {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OutboxEventStatus eventStatus;
+    private OutboxEventStatus status;
 
     @Column(nullable = false)
     private String postId;
@@ -51,7 +51,7 @@ public class OutBoxEvent {
 
     public OutBoxEvent(Post post) {
         this.id = UUID.randomUUID().toString();
-        this.eventStatus = OutboxEventStatus.PENDING;
+        this.status = OutboxEventStatus.PENDING;
         this.postId = post.getPostId();
         this.authorId = post.getAuthor().getUserId();
         this.hotUser = post.getAuthor().isHotUser();
@@ -77,14 +77,14 @@ public class OutBoxEvent {
     }
 
     public void markPublished() {
-        this.eventStatus = OutboxEventStatus.PUBLISHED;
+        this.status = OutboxEventStatus.PUBLISHED;
     }
 
     public void scheduleRetry(Instant nextAttemptTime, int maxAttempt) {
         this.attemptCount++;
         this.nextAttemptTime = nextAttemptTime;
         if (this.attemptCount >= maxAttempt) {
-            this.eventStatus=OutboxEventStatus.FAILED;
+            this.status=OutboxEventStatus.FAILED;
         }
     }
 
