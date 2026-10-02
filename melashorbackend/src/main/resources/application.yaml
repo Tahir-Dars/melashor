@@ -28,6 +28,11 @@ spring:
       stream:
         key: feed:events
 
+      publisher:
+        batch-size: 100
+        max-attempt: 10
+        fixed-delayed-ms: 1000
+
       consumer:
         group: feed:workers
         name: worker-1
