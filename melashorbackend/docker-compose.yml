@@ -5,7 +5,9 @@ services:
       - "5342:5432"
     restart: always
     environment:
+      POSTGRES_USER: melashor
       POSTGRES_PASSWORD: newpassword
+      POSTGRES_DB: shopatease
 
   adminer:
     image: adminer:latest

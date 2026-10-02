@@ -3,14 +3,16 @@ spring:
     name:melashor
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shopatease}
-    username: ${SPRING_DATASOURCE_USERNAME:melashor}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5342/shopatease}
+    username: ${SPRING_DATA_USERNAME:melashor}
     password: ${SPRING_DATASOURCE_PASSWORD:newpassword}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: updated
+      ddl-auto: update
+    properties:
+      hibernate.jdbc.time_zone: UTC
 
   data:
     redis:
