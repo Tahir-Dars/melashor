@@ -44,6 +44,7 @@ spring:
         fixed-delay-ms: 5000
         reclaim-idle-ms: 30000
         reclaim-batch-size: 50
+        recover-fixed-delay-ms: 5000
 
   management:
     endpoints:

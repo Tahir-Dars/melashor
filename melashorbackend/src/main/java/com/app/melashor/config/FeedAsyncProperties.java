@@ -40,5 +40,6 @@ public class FeedAsyncProperties {
         private long fixedDelayMs;
         private long reclaimIdleMs;
         private int reclaimBatchSize;
+        private long recoverFixedDelayMs;
     }
 }
