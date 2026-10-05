@@ -168,5 +168,11 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
         return;
     }
 
+    @Override
+    public void recoverAsyncWorkerDeadLetter(String operationName) {
+        meterRegistry.counter("feedme.feed.async.worker.dead_letter",
+                "operation", operationName).increment();
+    }
+
 
 }
