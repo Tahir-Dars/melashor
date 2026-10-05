@@ -288,6 +288,16 @@ public class FeedServiceMgr implements FeedService {
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
     }
 
+    @Override
+    public void processPostCreationEvent(String postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found for Async Propagation"));
+        appDeliveryStrategy(post);
+    }
+
+    private void appDeliveryStrategy(Post post) {
+    }
+
     private PostCreationRequest validateAndReuseCreatePostRequest(PostCreationRequest existing, String requestHash) {
         if (!existing.getRequestHash().equals(requestHash)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Idempotency key already used for a different post request");

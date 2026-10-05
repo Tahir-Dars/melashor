@@ -21,4 +21,6 @@ public interface FeedService {
     PostResponse createPost(@Valid CreatePostRequest postRequest);
 
     PostResponse getPost(String postId);
+
+    void processPostCreationEvent(String postId);
 }
