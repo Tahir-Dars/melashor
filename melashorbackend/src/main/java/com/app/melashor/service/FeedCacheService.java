@@ -1,5 +1,6 @@
 package com.app.melashor.service;
 
+import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 
 import java.util.Optional;
@@ -10,4 +11,6 @@ public interface FeedCacheService {
     void cacheHomeFeed(TimeLinePageResponse pageResponse);
 
     void evictHomeFeed(String followerId);
+
+    void prependToHomeFeed(String viewerId, FeedItemResponse item);
 }

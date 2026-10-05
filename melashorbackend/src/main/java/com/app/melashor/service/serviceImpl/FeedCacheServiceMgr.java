@@ -1,5 +1,6 @@
 package com.app.melashor.service.serviceImpl;
 
+import com.app.melashor.domain.dto.record.FeedItemResponse;
 import com.app.melashor.domain.dto.record.TimeLinePageResponse;
 import com.app.melashor.service.FeedCacheService;
 import com.app.melashor.service.FeedMetricsService;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -22,6 +25,7 @@ public class FeedCacheServiceMgr implements FeedCacheService {
     private final StringRedisTemplate redisTemplate;
     private final FeedMetricsService metricsService;
     private final ObjectMapper objectMapper;
+    private final FeedCursorCodecMgr codecMgr;
 
     @Override
     public Optional<TimeLinePageResponse> getHomeFeed(String userId) {
@@ -56,6 +60,42 @@ public class FeedCacheServiceMgr implements FeedCacheService {
             metricsService.recordCacheMutation("evict");
         } catch (Exception e) {
             log.error("Error occurred while processing request", e);
+        }
+
+    }
+
+    @Override
+    public void prependToHomeFeed(String userId, FeedItemResponse item) {
+        try {
+            Optional<TimeLinePageResponse> cacheFeed = getHomeFeed(userId);
+            if (cacheFeed.isEmpty()) {
+                return;
+            }
+            TimeLinePageResponse existing = cacheFeed.get();
+
+            List<FeedItemResponse> updatedItems = new ArrayList<>();
+            updatedItems.add(item);
+
+            existing.feedItems().stream().filter(
+                    existingItem -> !existingItem.postId().equals(item.postId())
+            ).forEach(updatedItems::add);
+
+            if (updatedItems.size() > DEFAULT_PAGE_SIZE) {
+                updatedItems = updatedItems.subList(0, DEFAULT_PAGE_SIZE);
+            }
+
+            writeHomeFeed(new TimeLinePageResponse(
+                    existing.timelineOwnerId(),
+                    updatedItems,
+                    existing.mode(),
+                    existing.totalItems(),
+                    existing.totalItems() + 1 > updatedItems.size()
+                            && !updatedItems.isEmpty() ? codecMgr.encode(updatedItems.getLast()) : null
+            ));
+
+            metricsService.recordCacheMutation("prepend");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
