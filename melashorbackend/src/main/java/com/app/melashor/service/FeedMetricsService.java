@@ -29,4 +29,6 @@ public interface FeedMetricsService {
     void recordPostCreation(long startAtNanos, String authorType, String idempotencyOutCome);
 
     void recordAsyncWorkerRetry(String operationName);
+
+    void recoverAsyncWorkerDeadLetter(String operationName);
 }

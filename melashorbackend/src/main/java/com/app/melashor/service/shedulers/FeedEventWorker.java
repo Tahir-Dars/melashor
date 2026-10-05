@@ -163,6 +163,7 @@ public class FeedEventWorker {
                 return;
             }
             feedService.processPostCreationEvent(postId);
+            clearFailureState(eventId);
 
             redisTemplate.opsForStream().acknowledge(streamKey, consumerGroup, record.getId());
         } catch (Exception exception) {
@@ -174,7 +175,13 @@ public class FeedEventWorker {
 
             movedToDeadLetter(record, eventFields, eventId, attemptCount, exception, operationName);
             redisTemplate.opsForStream().acknowledge(streamKey, consumerGroup, record.getId());
+            feedEventFailureRepository.deleteById(eventId);
+            metricsService.recoverAsyncWorkerDeadLetter(operationName);
         }
+    }
+
+    private void clearFailureState(String eventId) {
+        feedEventFailureRepository.deleteById(eventId);
     }
 
     private void movedToDeadLetter(MapRecord<String, Object,
