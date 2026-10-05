@@ -162,4 +162,11 @@ public class FeedMetricsServiceMgr implements FeedMetricsService {
                 .increment();
     }
 
+    @Override
+    public void recordAsyncWorkerRetry(String operationName) {
+        meterRegistry.counter("feedme.feed.async.worker.retries", operationName);
+        return;
+    }
+
+
 }

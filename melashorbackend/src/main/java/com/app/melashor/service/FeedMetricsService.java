@@ -27,4 +27,6 @@ public interface FeedMetricsService {
     void recordCacheMutation(String action);
 
     void recordPostCreation(long startAtNanos, String authorType, String idempotencyOutCome);
+
+    void recordAsyncWorkerRetry(String operationName);
 }
