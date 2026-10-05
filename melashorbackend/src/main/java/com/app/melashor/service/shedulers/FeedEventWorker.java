@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.List;
@@ -42,6 +43,7 @@ public class FeedEventWorker {
 
     private final FeedService feedService;
     private final FeedMetricsService metricsService;
+    private final ObjectMapper objectMapper;
 
     private final FeedAsyncProperties feedAsyncProperties;
 
@@ -205,7 +207,11 @@ public class FeedEventWorker {
     }
 
     private String toJson(Map<Object, Object> eventFields) {
-        return "json";
+        try {
+            return objectMapper.writeValueAsString(eventFields);
+        } catch (Exception e) {
+            return "{\"serialization\":true}";
+        }
     }
 
     private int recordFailureAttempt(String eventId, Exception exception) {
@@ -239,8 +245,8 @@ public class FeedEventWorker {
             }
 
             List<RecordId> staleRecordIds = pendingMessages.stream().
-                   // filter(()"this.isClaimPendingMessage").
-                    map(PendingMessage::getId)
+                    // filter(()"this.isClaimPendingMessage").
+                            map(PendingMessage::getId)
                     .toList();
 
             if (staleRecordIds.isEmpty()) {
