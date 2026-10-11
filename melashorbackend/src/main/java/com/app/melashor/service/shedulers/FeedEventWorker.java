@@ -97,6 +97,12 @@ public class FeedEventWorker {
 
     }
 
+    private void requireText(String value, String propertyName) {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalStateException(propertyName + " must not be blank");
+        }
+    }
+
     private void process(MapRecord<String, Object, Object> record, String consumePostEvent) {
     }
 
