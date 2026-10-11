@@ -296,6 +296,25 @@ public class FeedServiceMgr implements FeedService {
     }
 
     private void appDeliveryStrategy(Post post) {
+        if (post.getAuthor().isHotUser()) {
+            metricsService.recordDeliveryPath("hybrid_pull");
+            return;
+        }
+        metricsService.recordDeliveryPath("fan_out_on_write");
+
+        for (String viewerId : getAffectedViewerIds(post.getAuthor().getUserId())) {
+            Set<String> visibleAuthorIds = getVisibleAuthors(getUser(viewerId)).allAuthorIds;
+            FeedItemResponse item = toFeedItems(post, viewerId, visibleAuthorIds);
+            feedCacheService.prependToHomeFeed(viewerId,item);
+        }
+    }
+
+    private Set<String> getAffectedViewerIds(String userId) {
+        Set<String> viewerIds = new LinkedHashSet<>();
+        viewerIds.add(userId);
+        followRelationshipsRepo.findByFollowed_UserId(userId)
+                .forEach(relation -> viewerIds.add(relation.getFollower().getUserId()));
+        return viewerIds;
     }
 
     private PostCreationRequest validateAndReuseCreatePostRequest(PostCreationRequest existing, String requestHash) {
