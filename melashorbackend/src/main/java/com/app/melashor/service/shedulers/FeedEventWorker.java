@@ -68,6 +68,18 @@ public class FeedEventWorker {
 
     }
 
+    private void validateConfiguration() {
+        requireText(feedAsyncProperties.getStream().getKey(), "feed.async.stream.key");
+        requireText(feedAsyncProperties.getConsumer().getGroup(), "feed.async.consumer.group");
+        requireText(feedAsyncProperties.getConsumer().getGroup(), "feed.async.stream.name");
+        requireText(feedAsyncProperties.getConsumer().getGroup(), "feed.async.consumer.dlq-stream-key");
+
+        if (feedAsyncProperties.getConsumer().getBatchSize() <= 0) {
+            throw new IllegalStateException("feed.async.consumer.batch-size must be greater than 0");
+        }
+    }
+
+
     @Scheduled(fixedDelayString = "${feed.async.consumer.fixed-delay-ms}")
     @Transactional
     public void consumePostEvents() {
