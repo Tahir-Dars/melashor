@@ -21,30 +21,30 @@ spring:
       repositories:
         enabled: true
 
-  feed:
-    async:
-      enabled: true
+feed:
+  async:
+    enabled: true
 
-      stream:
-        key: feed:events
+    stream:
+      key: feed:events
 
-      publisher:
-        batch-size: 100
-        max-attempt: 10
-        fixed-delayed-ms: 1000
+    publisher:
+      batch-size: 100
+      max-attempt: 10
+      fixed-delayed-ms: 1000
 
-      consumer:
-        group: feed:workers
-        name: worker-1
-        batch-size: 100
-        max-processing-attempts: 5
-        dlq-stream-key: feed:events:dlq
-        reclaim-enabled: true
-        reclaim-fixed-delay-ms: 5000
-        fixed-delay-ms: 5000
-        reclaim-idle-ms: 30000
-        reclaim-batch-size: 50
-        recover-fixed-delay-ms: 5000
+    consumer:
+      group: feed:workers
+      name: worker-1
+      batch-size: 100
+      max-processing-attempts: 5
+      dlq-stream-key: feed:events:dlq
+      reclaim-enabled: true
+      reclaim-fixed-delay-ms: 5000
+      fixed-delay-ms: 5000
+      reclaim-idle-ms: 30000
+      reclaim-batch-size: 50
+      recover-fixed-delay-ms: 5000
 
   management:
     endpoints:

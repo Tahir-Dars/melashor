@@ -14,7 +14,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Pageable;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -42,9 +41,9 @@ public class FeedEventOutboxPublisher {
             FeedMetricsService feedMetricsService,
             @Value("${feed.async.stream.key}")
             String streamKey,
-            @Value("${feed.publisher.batch-size}")
+            @Value("${feed.async.publisher.batch-size}")
             int publishBatchSize,
-            @Value("${feed.publisher.max-attempt}")
+            @Value("${feed.async.publisher.max-attempt}")
             int maxAttempt
     ) {
         this.redisTemplate = redisTemplate;
@@ -55,14 +54,14 @@ public class FeedEventOutboxPublisher {
         this.feedMetricsService = feedMetricsService;
     }
 
-    @Scheduled(fixedDelayString = "${feed.aync.publisher.fixed-delayed-ms}")
+    @Scheduled(fixedDelayString = "${feed.async.publisher.fixed-delayed-ms}")
     @Transactional
     public void publishedPendingEvents() {
         List<OutBoxEvent> pendingEvents = outboxEventRepository
                 .findByStatusAndNextAttemptTimeLessThanEqualOrderByCreatedAtAsc(
                         OutboxEventStatus.PENDING,
                         Instant.now(),
-                        (Pageable) PageRequest.of(0, publishBatchSize));
+                        PageRequest.of(0, publishBatchSize));
 
         for (OutBoxEvent event : pendingEvents) {
             try {

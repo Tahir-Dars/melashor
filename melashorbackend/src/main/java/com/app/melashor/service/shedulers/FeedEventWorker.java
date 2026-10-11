@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Range;
+import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -50,9 +51,11 @@ public class FeedEventWorker {
 
     @PostConstruct
     public void initializeConsumerGroup() {
+        validateConfiguration();
+
+        String streamKey = feedAsyncProperties.getStream().getKey();
+        String consumerGroup = feedAsyncProperties.getConsumer().getGroup();
         try {
-            String streamKey = feedAsyncProperties.getStream().getKey();
-            String consumerGroup = feedAsyncProperties.getConsumer().getGroup();
             StreamInfo.XInfoGroups groups = redisTemplate
                     .opsForStream().groups(feedAsyncProperties.getStream().getKey());
 
@@ -61,11 +64,47 @@ public class FeedEventWorker {
             if (!exists) {
                 redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.latest(), consumerGroup);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (RedisSystemException redisSystemException) {
+            if (isMissingStream(redisSystemException)) {
+                createConsumerGroupWithStream(streamKey, consumerGroup);
+                return;
+            }
+            throw redisSystemException;
         }
 
 
+    }
+
+    private void createConsumerGroupWithStream(String streamKey, String consumerGroup) {
+        RecordId intializeRecordId = redisTemplate.opsForStream().add(
+                MapRecord.create(streamKey, Map.of("__system__", "stream-init"))
+        );
+
+        try {
+            redisTemplate.opsForStream().createGroup(streamKey, ReadOffset.latest(), consumerGroup);
+        } catch (RedisSystemException redisSystemException) {
+            if (!groupAlreadyExist(redisSystemException)) {
+                throw redisSystemException;
+            }
+        } finally {
+            if (intializeRecordId != null) {
+                redisTemplate.opsForStream().delete(streamKey, intializeRecordId);
+            }
+        }
+    }
+
+    private boolean groupAlreadyExist(RedisSystemException redisSystemException) {
+        Throwable cause = redisSystemException.getCause();
+        return cause != null
+                && cause.getMessage() != null
+                && cause.getMessage().contains("BUSYGROUP");
+    }
+
+    private boolean isMissingStream(RedisSystemException redisSystemException) {
+        Throwable cause = redisSystemException.getCause();
+        return cause != null
+                && cause.getMessage() != null
+                && cause.getMessage().contains("ERR no such key");
     }
 
     private void validateConfiguration() {

@@ -2,9 +2,9 @@ package com.app.melashor.repositories;
 
 import com.app.melashor.domain.OutboxEventStatus;
 import com.app.melashor.domain.model.OutBoxEvent;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.awt.print.Pageable;
 import java.time.Instant;
 import java.util.List;
 
