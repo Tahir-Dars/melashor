@@ -125,6 +125,7 @@ public class FeedServiceMgr implements FeedService {
         return new FollowingResponse(followerId, targetUserIds, targetUserIds.size());
     }
 
+    @Transactional
     @Override
     public FollowResponse follow(String followerId, String userId) {
         long startedAtNanos = metricsService.startTime();
@@ -170,6 +171,7 @@ public class FeedServiceMgr implements FeedService {
         getUser(userId);
     }
 
+    @Transactional
     @Override
     public FollowResponse unFollow(String followerId, String userId) {
         long startAtNanos = metricsService.startTime();
