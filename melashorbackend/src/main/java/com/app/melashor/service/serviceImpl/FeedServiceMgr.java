@@ -113,7 +113,7 @@ public class FeedServiceMgr implements FeedService {
 
     @Override
     public List<UserProfileResponse> getUser() {
-        return userProfileRepository.findAll(Sort.by("id")).stream().map(this::toUserProfileResponse).toList();
+        return userProfileRepository.findAll(Sort.by("userId")).stream().map(this::toUserProfileResponse).toList();
     }
 
     @Override
@@ -191,6 +191,27 @@ public class FeedServiceMgr implements FeedService {
         } catch (ResponseStatusException e) {
             metricsService.recordServiceError("unfollow", e.getStatusCode().toString());
             throw e;
+        }
+    }
+
+    @Override
+    public void processPostCreationEvent(String postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found for Async Propagation"));
+        appDeliveryStrategy(post);
+    }
+
+    private void appDeliveryStrategy(Post post) {
+        if (post.getAuthor().isHotUser()) {
+            metricsService.recordDeliveryPath("hybrid_pull");
+            return;
+        }
+        metricsService.recordDeliveryPath("fan_out_on_write");
+
+        for (String viewerId : getAffectedViewerIds(post.getAuthor().getUserId())) {
+            Set<String> visibleAuthorIds = getVisibleAuthors(getUser(viewerId)).allAuthorIds;
+            FeedItemResponse item = toFeedItems(post, viewerId, visibleAuthorIds);
+            feedCacheService.prependToHomeFeed(viewerId, item);
         }
     }
 
@@ -288,26 +309,6 @@ public class FeedServiceMgr implements FeedService {
                 orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
     }
 
-    @Override
-    public void processPostCreationEvent(String postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found for Async Propagation"));
-        appDeliveryStrategy(post);
-    }
-
-    private void appDeliveryStrategy(Post post) {
-        if (post.getAuthor().isHotUser()) {
-            metricsService.recordDeliveryPath("hybrid_pull");
-            return;
-        }
-        metricsService.recordDeliveryPath("fan_out_on_write");
-
-        for (String viewerId : getAffectedViewerIds(post.getAuthor().getUserId())) {
-            Set<String> visibleAuthorIds = getVisibleAuthors(getUser(viewerId)).allAuthorIds;
-            FeedItemResponse item = toFeedItems(post, viewerId, visibleAuthorIds);
-            feedCacheService.prependToHomeFeed(viewerId, item);
-        }
-    }
 
     private Set<String> getAffectedViewerIds(String userId) {
         Set<String> viewerIds = new LinkedHashSet<>();
