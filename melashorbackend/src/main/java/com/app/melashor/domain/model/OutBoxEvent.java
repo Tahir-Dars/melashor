@@ -84,7 +84,7 @@ public class OutBoxEvent {
         this.attemptCount++;
         this.nextAttemptTime = nextAttemptTime;
         if (this.attemptCount >= maxAttempt) {
-            this.status=OutboxEventStatus.FAILED;
+            this.status = OutboxEventStatus.FAILED;
         }
     }
 

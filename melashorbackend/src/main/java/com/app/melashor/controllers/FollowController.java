@@ -19,13 +19,13 @@ public class FollowController {
     }
 
     @PostMapping("/{userId}")
-    private FollowResponse follow(@RequestParam String followerId, @PathVariable String userId){
-        return feedService.follow(followerId,userId);
+    private FollowResponse follow(@RequestParam String followerId, @PathVariable String userId) {
+        return feedService.follow(followerId, userId);
     }
 
     @DeleteMapping("/{userId}")
-    private FollowResponse unFollow(@RequestParam String followerId, @PathVariable String userId){
-        return feedService.unFollow(followerId,userId);
+    private FollowResponse unFollow(@RequestParam String followerId, @PathVariable String userId) {
+        return feedService.unFollow(followerId, userId);
     }
 
 }

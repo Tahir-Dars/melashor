@@ -305,7 +305,7 @@ public class FeedServiceMgr implements FeedService {
         for (String viewerId : getAffectedViewerIds(post.getAuthor().getUserId())) {
             Set<String> visibleAuthorIds = getVisibleAuthors(getUser(viewerId)).allAuthorIds;
             FeedItemResponse item = toFeedItems(post, viewerId, visibleAuthorIds);
-            feedCacheService.prependToHomeFeed(viewerId,item);
+            feedCacheService.prependToHomeFeed(viewerId, item);
         }
     }
 
