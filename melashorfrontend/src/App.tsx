@@ -10,9 +10,10 @@ class AppErrorBoundary extends Component<{ children: ReactNode},{error: unknown}
     }
 
     override render(){
-        if(this.state.error){
-          
+        if(this.state.error){   
+
         }
+        return this.props.children;
     }
     
   };
