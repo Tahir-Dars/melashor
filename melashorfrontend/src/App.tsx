@@ -1,9 +1,23 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import {Component,type ReactNode} from "react"
+
+class AppErrorBoundary extends Component<{ children: ReactNode},{error: unknown}>{
+  override state ={error:null as unknown};
+
+
+    static getDerivatedStateFromErro(error:unknown)
+    {
+      return (error);
+    }
+
+    override render(){
+        if(this.state.error){
+          
+        }
+    }
+    
+  };
+
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
