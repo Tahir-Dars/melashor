@@ -1,8 +1,8 @@
-export function loadingScreen() {
+export function LoadingScreen() {
   return (
     <div className="loading-shell">
       <div className="loading-orb" />
-      <p>MelaShor is being booten </p>
+      <p>MelaShor is being booten ...</p>
     </div>
   );
 }
