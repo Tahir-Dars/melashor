@@ -2,4 +2,6 @@ type AppShellProps = {
   activeUserId: string;
 };
 
-export function AppShell({ activeUserId }: AppShellProps) {}
+export function AppShell({activeUserId}: AppShellProps) {
+    
+}
