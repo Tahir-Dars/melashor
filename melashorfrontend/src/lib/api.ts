@@ -1,4 +1,7 @@
-import { type TimeLinePageResponse, type followingResponse, type followResponse, type UserProfile, type PostResponse } from "../types";
+import {
+    type TimeLinePageResponse, type followingResponse, type followResponse,
+    type UserProfile, type PostResponse, type DashboardData
+} from "../types";
 
 const API_ROOT = '/api';
 
@@ -69,8 +72,26 @@ export const feedApi = {
         `/follow/${encodeURIComponent(targetUserId)}?followerId=${encodeURIComponent(followerId)}`,
         { method: 'DELETE' }
     ),
+
+    async getDahsboardData(activeUserId: string): Promise<DashboardData> {
+        const [users, following, homefeed, profileFeed] = await Promise.all(
+            [
+                this.getUsers(),
+                this.getFollowing(activeUserId),
+                this.getHomeFeed(activeUserId),
+                this.getUserFeed(activeUserId),
+            ]
+        )
+        return { users, following, homefeed, profileFeed };
+    }
 }
 function createIdempotencyKey() {
+    if (typeof globalThis.crypto !== 'undefined' &&
+        typeof globalThis.crypto.randomUUID === 'function') {
 
+        return globalThis.crypto.randomUUID();
+    }
+
+    return `melashor-${Date.now}-${Math.random().toString(36).slice(2, 12)}`;
 }
 

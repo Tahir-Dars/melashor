@@ -51,5 +51,5 @@ export type DashboardData = {
     users: UserProfile[];
     following: followingResponse;
     homefeed: TimeLinePageResponse;
-    profileFeed: number;
+    profileFeed: TimeLinePageResponse;
 }
