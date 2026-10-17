@@ -1,4 +1,4 @@
-import { TimeLinePageResponse, type followingResponse, type followResponse, type UserProfile } from "../types";
+import { type TimeLinePageResponse, type followingResponse, type followResponse, type UserProfile, type PostResponse } from "../types";
 
 const API_ROOT = '/api';
 
@@ -27,7 +27,7 @@ export const feedApi = {
     getUsers: () => request<UserProfile[]>('/users'),
 
     getFollowing: (followerId: string) => request<followingResponse>
-        (`/follows?followerId=${followerId}`),
+        (`/follows?followerId=${encodeURIComponent(followerId)}`),
 
     getHomeFeed: (userId: string, cursor?: null) => {
         const param = new URLSearchParams({ userId, limit: '5' });
@@ -36,14 +36,41 @@ export const feedApi = {
             param.set('cursor', cursor);
         }
         return request<TimeLinePageResponse>(`/feed/home?${param.toString}`);
-    }
-    }
-     getUserFeed: (userId: string, cursor?: string | null) => {
+    },
+
+    getUserFeed: (userId: string, cursor?: string | null) => {
         const param = new URLSearchParams({ userId, limit: '5' });
 
         if (cursor) {
             param.set('cursor', cursor);
         }
-        return request<TimeLinePageResponse>(`/feed/home?${param.toString}`);
+        return request<TimeLinePageResponse>
+            (`/feed/user${encodeURIComponent(userId)}?${param.toString}`);
+
+
+    },
+    createPost: (authorId: string, content: string) => request<PostResponse>(
+        '/posts',
+        {
+            method: 'POST',
+            body: JSON.stringify({
+                idempotencyKey: createIdempotencyKey(),
+                authorId,
+                content
+            })
+        }),
+
+    followUser: (followerId: string, targetUserId: string) =>
+        request<followResponse>(
+            `/follow/${encodeURIComponent(targetUserId)}?followerId=${encodeURIComponent(followerId)}`,
+            { method: 'POST' }
+        ),
+    unFollowUser: (followerId: string, targetUserId: string) => request<followResponse>(
+        `/follow/${encodeURIComponent(targetUserId)}?followerId=${encodeURIComponent(followerId)}`,
+        { method: 'DELETE' }
+    ),
+}
+function createIdempotencyKey() {
 
 }
+
