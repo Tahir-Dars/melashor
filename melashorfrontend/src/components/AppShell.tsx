@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMelaShorDashboard } from "../hooks/use-melashor-dashboard";
 import { useState } from "react";
+import { FiSearch } from "react-icons/fi";
 
 type AppShellProps = {
   activeUserId: string;
@@ -55,6 +56,38 @@ export function AppShell({ activeUserId }: AppShellProps) {
           </label>
         </div>
       </header>
+      <main className="melashor-workspace three-column">
+        <section className="column-stack">
+          <section className="panel roster-panel">
+            <div className="panel-header panel-header-search">
+              <div className="panel-title-with-search">
+                <p className="head">Following</p>
+                <div className="panel-title-row">
+                  <h2>{activeUser.name}</h2>
+                  <button
+                    aria-expanded={isSearchOpen}
+                    aria-label={isSearchOpen ? "Hide Search" : "Show search"}
+                    className="icon-button"
+                    type="button"
+                    onClick={() => setIsSearchOpen((previous) => !previous)}
+                  >
+                    <FiSearch />
+                  </button>
+                </div>
+                {!isSearchOpen ? (
+                  <input
+                    aria-label="search people"
+                    className="search-input"
+                    placeholder="Search"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                  />
+                ) : null}
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
     </div>
   );
 }
