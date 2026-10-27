@@ -61,6 +61,8 @@ export function useMelaShorDashboard(activeUserId: string) {
         setSearchQuery,
         filteredUser,
         followingIds,
-        selectedTimelineUserId
+        selectedTimelineUserId,
+        selectTimelineUser,
+        handleFollowToggle
     }
 }
