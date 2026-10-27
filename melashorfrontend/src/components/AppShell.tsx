@@ -27,6 +27,16 @@ export function AppShell({ activeUserId }: AppShellProps) {
 
   const [followBusyId, setFollowBusyId] = useState<string | null>(null);
 
+  const followedUsers = filteredUser.filter(
+    (user) =>
+      user.userId !== activeUserId && followingIds.includes(user.userId),
+  );
+
+  const suggestedUsers = filteredUser.filter(
+    (user) =>
+      user.userId !== activeUserId && !followingIds.includes(user.userId),
+  );
+
   return (
     <div className="page-shell">
       <header className="topbar">
@@ -84,6 +94,13 @@ export function AppShell({ activeUserId }: AppShellProps) {
                   />
                 ) : null}
               </div>
+            </div>
+            <div className="user-list">
+              {/* {followedUsers.length > 0 ? (
+                renderUserCards("followed")
+              ) : (
+                <p className="empty-text">No Followed Users Yet</p>
+              )} */}
             </div>
           </section>
         </section>
